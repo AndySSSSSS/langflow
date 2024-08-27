@@ -87,7 +87,7 @@ export default function Header(): JSX.Element {
     <div className="header-arrangement relative">
       <div className="header-start-display">
         <Link to="/all" className="cursor-pointer">
-          <span className="ml-4 text-2xl">⛓️</span>
+          <span className="ml-4 text-2xl">🐙</span>
         </Link>
         {showArrowReturnIcon && (
           <Button
@@ -129,7 +129,7 @@ export default function Header(): JSX.Element {
               data-testid="button-store"
             >
               <IconComponent name="Store" className="h-4 w-4" />
-              <div className="hidden flex-1 lg:block">Store</div>
+              <div className="hidden flex-1 lg:block">市  场</div>
             </Button>
           </Link>
         )}
@@ -138,34 +138,34 @@ export default function Header(): JSX.Element {
         <div className="header-end-display">
           {FeatureFlags.ENABLE_SOCIAL_LINKS && (
             <>
-              <a
-                href="https://github.com/langflow-ai/langflow"
-                target="_blank"
-                rel="noreferrer"
-                className="header-github-link gap-2"
-              >
-                <FaGithub className="h-5 w-5" />
-                <div className="hidden lg:block">Star</div>
-                <div className="header-github-display">{stars ?? 0}</div>
-              </a>
-              <a
-                href="https://twitter.com/langflow_ai"
-                target="_blank"
-                rel="noreferrer"
-                className="text-muted-foreground"
-              >
-                <RiTwitterXFill className="side-bar-button-size" />
-              </a>
-              <a
-                href="https://discord.gg/EqksyE2EX9"
-                target="_blank"
-                rel="noreferrer"
-                className="text-muted-foreground"
-              >
-                <FaDiscord className="side-bar-button-size" />
-              </a>
+              {/*<a*/}
+              {/*  href="https://github.com/langflow-ai/langflow"*/}
+              {/*  target="_blank"*/}
+              {/*  rel="noreferrer"*/}
+              {/*  className="header-github-link gap-2"*/}
+              {/*>*/}
+              {/*  <FaGithub className="h-5 w-5" />*/}
+              {/*  <div className="hidden lg:block">Star</div>*/}
+              {/*  <div className="header-github-display">{stars ?? 0}</div>*/}
+              {/*</a>*/}
+              {/*<a*/}
+              {/*  href="https://twitter.com/langflow_ai"*/}
+              {/*  target="_blank"*/}
+              {/*  rel="noreferrer"*/}
+              {/*  className="text-muted-foreground"*/}
+              {/*>*/}
+              {/*  <RiTwitterXFill className="side-bar-button-size" />*/}
+              {/*</a>*/}
+              {/*<a*/}
+              {/*  href="https://discord.gg/EqksyE2EX9"*/}
+              {/*  target="_blank"*/}
+              {/*  rel="noreferrer"*/}
+              {/*  className="text-muted-foreground"*/}
+              {/*>*/}
+              {/*  <FaDiscord className="side-bar-button-size" />*/}
+              {/*</a>*/}
 
-              <Separator orientation="vertical" />
+              {/*<Separator orientation="vertical" />*/}
             </>
           )}
           {FeatureFlags.ENABLE_DARK_MODE && (

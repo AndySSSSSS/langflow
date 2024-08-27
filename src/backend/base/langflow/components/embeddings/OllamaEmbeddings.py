@@ -1,8 +1,10 @@
+from typing import Any
 from langchain_community.embeddings import OllamaEmbeddings
 
+import httpx
 from langflow.base.models.model import LCModelComponent
 from langflow.field_typing import Embeddings
-from langflow.io import FloatInput, MessageTextInput, Output
+from langflow.io import FloatInput, MessageTextInput, DropdownInput, Output
 
 
 class OllamaEmbeddingsComponent(LCModelComponent):
@@ -12,11 +14,38 @@ class OllamaEmbeddingsComponent(LCModelComponent):
     icon = "Ollama"
     name = "OllamaEmbeddings"
 
+    def update_build_config(self, build_config: dict, field_value: Any, field_name: str | None = None):
+        if field_name == "model_name":
+            base_url_dict = build_config.get("base_url", {})
+            base_url_load_from_db = base_url_dict.get("load_from_db", False)
+            base_url_value = base_url_dict.get("value")
+            if base_url_load_from_db:
+                base_url_value = self.variables(base_url_value)
+            elif not base_url_value:
+                base_url_value = "http://localhost:11434"
+            build_config["model_name"]["options"] = self.get_model(base_url_value + "/api/tags")
+
+        return build_config
+
+    def get_model(self, url: str) -> list[str]:
+        try:
+            with httpx.Client() as client:
+                response = client.get(url)
+                response.raise_for_status()
+                data = response.json()
+
+                model_names = [model["name"] for model in data.get("models", [])]
+                return model_names
+        except Exception as e:
+            raise ValueError("Could not retrieve models. Please, make sure Ollama is running.") from e
+
     inputs = [
-        MessageTextInput(
-            name="model",
-            display_name="Ollama Model",
+        DropdownInput(
+            name="model_name",
+            display_name="Ollama Embedding Model",
             value="llama3.1",
+            info="Refer to https://ollama.com/library for more models.",
+            refresh_button=True,
         ),
         MessageTextInput(
             name="base_url",
@@ -38,7 +67,7 @@ class OllamaEmbeddingsComponent(LCModelComponent):
     def build_embeddings(self) -> Embeddings:
         try:
             output = OllamaEmbeddings(
-                model=self.model,
+                model=self.model_name,
                 base_url=self.base_url,
                 temperature=self.temperature,
             )  # type: ignore

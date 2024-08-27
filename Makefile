@@ -74,6 +74,12 @@ build_frontend: ## build the frontend static files
 	rm -rf src/backend/base/langflow/frontend
 	cp -r src/frontend/build src/backend/base/langflow/frontend
 
+build_backend: ## add by AndySong
+	make clean_python_cache
+	make install_backend
+	@echo "$(GREEN)All backend requirements are installed.$(NC)"
+	python -m langflow run
+
 init: check_tools clean_python_cache clean_npm_cache ## initialize the project
 	make install_backend
 	make install_frontend
