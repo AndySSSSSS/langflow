@@ -10,7 +10,6 @@ import {
   TIMEOUT_ERROR_MESSAGE,
 } from "@/constants/constants";
 import { useGetHealthQuery } from "@/controllers/API/queries/health";
-import useTrackLastVisitedPath from "@/hooks/use-track-last-visited-path";
 import useFlowsManagerStore from "@/stores/flowsManagerStore";
 import { useUtilityStore } from "@/stores/utilityStore";
 import { cn } from "@/utils/utils";
@@ -20,8 +19,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Outlet } from "react-router-dom";
 
 export function AppWrapperPage() {
-  useTrackLastVisitedPath();
-
   const isLoading = useFlowsManagerStore((state) => state.isLoading);
 
   const healthCheckMaxRetries = useFlowsManagerStore(
@@ -48,8 +45,6 @@ export function AppWrapperPage() {
   const isTimeoutResponseServer = healthCheckTimeout === "timeout";
 
   const [retryCount, setRetryCount] = useState(0);
-
-  console.log(healthCheckMaxRetries);
 
   useEffect(() => {
     const isServerBusy =
