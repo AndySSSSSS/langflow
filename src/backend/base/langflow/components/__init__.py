@@ -15,6 +15,7 @@ from . import (
     toolkits,
     tools,
     vectorstores,
+    wudao,
 )
 
 __all__ = [
@@ -34,4 +35,5 @@ __all__ = [
     "toolkits",
     "tools",
     "vectorstores",
+    "wudao",
 ]

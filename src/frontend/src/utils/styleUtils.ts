@@ -161,7 +161,7 @@ import {
   Wrench,
   X,
   XCircle,
-  Zap,
+  Zap, ThumbsUp,
 } from "lucide-react";
 import { FaApple, FaDiscord, FaGithub } from "react-icons/fa";
 import { AWSIcon } from "../icons/AWS";
@@ -261,6 +261,7 @@ export const gradients = [
 ];
 
 export const nodeColors: { [char: string]: string } = {
+  wudao: "#cbd662",
   inputs: "#10B981",
   outputs: "#AA2411",
   data: "#198BF6",
@@ -305,6 +306,7 @@ export const nodeColors: { [char: string]: string } = {
 };
 
 export const nodeNames: { [char: string]: string } = {
+  wudao: "Wudao",
   inputs: "Inputs",
   outputs: "Outputs",
   data: "Data",
@@ -345,6 +347,7 @@ export const nodeIconsLucide: iconsType = {
   ChatOutput: MessagesSquare,
   BotMessageSquareIcon,
   ChatInput: MessagesSquare,
+  wudao: ThumbsUp,
   inputs: Download,
   outputs: Upload,
   data: Database,
