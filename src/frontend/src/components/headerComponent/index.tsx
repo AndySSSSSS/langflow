@@ -121,7 +121,7 @@ export default function Header(): JSX.Element {
               data-testid="button-store"
             >
               <IconComponent name="Store" className="h-4 w-4" />
-              <div className="hidden flex-1 lg:block">Store</div>
+              <div className="hidden flex-1 lg:block">市 场</div>
             </Button>
           </CustomLink>
         )}
