@@ -220,7 +220,7 @@ const SideBarFoldersButtonsComponent = ({
   return (
     <>
       <div className="flex shrink-0 items-center justify-between gap-2">
-        <div className="flex-1 self-start text-lg font-semibold">Folders</div>
+        <div className="flex-1 self-start text-lg font-semibold">智能体矩阵</div>
         <Button
           variant="primary"
           size="icon"
