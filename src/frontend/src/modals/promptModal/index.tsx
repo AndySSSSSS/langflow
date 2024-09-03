@@ -1,6 +1,7 @@
 import { usePostValidatePrompt } from "@/controllers/API/queries/nodes/use-post-validate-prompt";
 import { useEffect, useRef, useState } from "react";
 import IconComponent from "../../components/genericIconComponent";
+import Dropdown from "../../components/dropdownComponent";
 import SanitizedHTMLWrapper from "../../components/sanitizedHTMLWrapper";
 import ShadTooltip from "../../components/shadTooltipComponent";
 import { Badge } from "../../components/ui/badge";
@@ -19,6 +20,8 @@ import {
   PROMPT_DIALOG_SUBTITLE,
   regexHighlight,
 } from "../../constants/constants";
+import {WUDAO_PROMPT_SAMPLES} from "../../constants/wudao_constants";
+import InputComponent from "@/components/inputComponent";
 import useAlertStore from "../../stores/alertStore";
 import { PromptModalType } from "../../types/components";
 import { handleKeyDown } from "../../utils/reactflowUtils";
@@ -172,6 +175,10 @@ export default function PromptModal({
     );
   }
 
+  function set_sample_prompt(prompt_id: string):void {
+    setInputValue(WUDAO_PROMPT_SAMPLES[prompt_id])
+  }
+
   return (
     <BaseModal
       onChangeOpenModal={(open) => {}}
@@ -196,6 +203,17 @@ export default function PromptModal({
         </div>
       </BaseModal.Header>
       <BaseModal.Content overflowHidden>
+        <div className="pb-2 text-primary">
+          <InputComponent
+              setSelectedOption={(e) => {
+                set_sample_prompt(e);
+              }}
+              password={false}
+              options={WUDAO_PROMPT_SAMPLES["keys"]}
+              placeholder="Prompt模板"
+              id={"type-prompt-sample"}
+          ></InputComponent>
+        </div>
         <div className={classNames("flex h-full w-full rounded-lg border")}>
           {isEdit && !readonly ? (
             <Textarea
