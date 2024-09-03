@@ -203,15 +203,16 @@ export default function PromptModal({
         </div>
       </BaseModal.Header>
       <BaseModal.Content overflowHidden>
-        <div className="pb-2 text-primary">
+        <div className="pb-2">
           <InputComponent
               setSelectedOption={(e) => {
                 set_sample_prompt(e);
               }}
               password={false}
               options={WUDAO_PROMPT_SAMPLES["keys"]}
-              placeholder="Prompt模板"
+              placeholder="Prompt 模板"
               id={"type-prompt-sample"}
+              autoFocus={false}
           ></InputComponent>
         </div>
         <div className={classNames("flex h-full w-full rounded-lg border")}>
