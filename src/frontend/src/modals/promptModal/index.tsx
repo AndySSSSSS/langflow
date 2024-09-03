@@ -20,7 +20,7 @@ import {
   PROMPT_DIALOG_SUBTITLE,
   regexHighlight,
 } from "../../constants/constants";
-import {WUDAO_PROMPT_SAMPLES} from "../../constants/wudao_constants";
+import {WUDAO_PROMPT_SAMPLES} from "../../constants/wudao_constants_prompt";
 import InputComponent from "@/components/inputComponent";
 import useAlertStore from "../../stores/alertStore";
 import { PromptModalType } from "../../types/components";
