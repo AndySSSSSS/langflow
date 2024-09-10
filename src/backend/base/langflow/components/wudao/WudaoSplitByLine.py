@@ -5,7 +5,7 @@ import spacy
 from langflow.custom import Component
 from langflow.io import HandleInput, IntInput, Output
 from langflow.schema import Data
-from langflow.utils.tool_text import clean_text, create_chunks
+from langflow.utils.wudao.tool_text import clean_text, create_chunks
 
 
 class WudaoSplitByLineComponent(Component):

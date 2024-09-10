@@ -4,7 +4,6 @@ from langchain_core.prompts import PromptTemplate
 
 from langflow.custom import Component
 from langflow.io import DataInput, HandleInput, Output
-from langflow.schema import Data
 
 
 class WudaoParseArticleComponent(Component):
