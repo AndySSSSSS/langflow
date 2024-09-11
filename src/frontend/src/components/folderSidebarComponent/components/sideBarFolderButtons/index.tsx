@@ -1,3 +1,4 @@
+import ShadTooltip from "@/components/shadTooltipComponent";
 import {
   usePatchFolders,
   usePostFolders,
@@ -68,6 +69,10 @@ const SideBarFoldersButtonsComponent = ({
 
   const handleUploadFlowsToFolder = () => {
     createFileUpload().then((files: File[]) => {
+      if (files?.length === 0) {
+        return;
+      }
+
       getObjectsFromFilelist<any>(files).then((objects) => {
         if (objects.every((flow) => flow.data?.nodes)) {
           uploadFlow({ files }).then(() => {
@@ -135,7 +140,7 @@ const SideBarFoldersButtonsComponent = ({
     );
   };
 
-  const { mutate: mutateAddFolder } = usePostFolders();
+  const { mutate: mutateAddFolder, isPending } = usePostFolders();
   const { mutate: mutateUpdateFolder } = usePatchFolders();
 
   function addNewFolder() {
@@ -226,7 +231,7 @@ const SideBarFoldersButtonsComponent = ({
   return (
     <>
       <div className="flex shrink-0 items-center justify-between gap-2">
-        <div className="flex-1 self-start text-lg font-semibold">智能体矩阵</div>
+        <div className="flex-1 self-start text-lg font-semibold">Folders</div>
 
         <ShadTooltip content={"Add a new folder"}>
           <Button
