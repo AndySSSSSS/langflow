@@ -261,7 +261,7 @@ export const gradients = [
 ];
 
 export const nodeColors: { [char: string]: string } = {
-  wudao: "#cbd662",
+  wudao: "#ee1c25",
   inputs: "#10B981",
   outputs: "#AA2411",
   data: "#198BF6",

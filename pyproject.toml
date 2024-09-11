@@ -107,6 +107,7 @@ composio-langchain = "^0.5.8"
 spider-client = "^0.0.27"
 spacy = "3.7.6"
 playwright = "1.46.0"
+minio = "7.2.8"
 
 
 [tool.poetry.group.dev.dependencies]

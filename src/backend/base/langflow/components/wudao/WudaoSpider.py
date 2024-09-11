@@ -1,13 +1,11 @@
-from typing import List
-
 from langflow.custom import Component
-from langflow.io import StrInput, MessageTextInput, Output
+from langflow.io import StrInput, Output
 from langflow.utils.wudao.tool_playwright import save_page_pdf
 
 
 class WudaoSpiderComponent(Component):
     display_name = "Wudao Spider"
-    description = "网页爬取。@五道科技"
+    description = "网页爬取，获取文章信息（标题、时间、文本、类型、pdf bytes）。@五道科技"
     icon = "monitor-down"
     name = "WudaoSpider"
 
@@ -18,7 +16,7 @@ class WudaoSpiderComponent(Component):
             required=True,
             info="The URL to scrape or crawl",
         ),
-        MessageTextInput(
+        StrInput(
             name="type",
             display_name="File Type",
             value='供销新闻',
@@ -28,12 +26,11 @@ class WudaoSpiderComponent(Component):
     ]
 
     outputs = [
-        Output(display_name="Chunks", name="chunks", method="parse_data"),
+        Output(display_name="article", name="article", method="save_page_data"),
     ]
 
-    async def parse_data(self) -> List[str]:
-        chunks = []
-        text = await save_page_pdf(self.url, self.type)
-        chunks.append(text)
-        self.status = chunks
-        return chunks
+    async def save_page_data(self) -> dict:
+        article = await save_page_pdf(self.url)
+        article['type'] = self.type
+        self.status = article['title']
+        return article

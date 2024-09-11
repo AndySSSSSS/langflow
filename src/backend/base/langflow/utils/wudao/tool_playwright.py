@@ -1,12 +1,10 @@
-import os
-
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 
 from langflow.utils.wudao.const_html_page import EXP_GONG_XIAO_NEWS
 
 
-async def save_page_pdf(page_url: str, save_pdf_path: str):
+async def save_page_pdf(page_url: str):
     async with async_playwright() as p:
         browser = await p.chromium.launch()
         page = await browser.new_page()
@@ -20,13 +18,8 @@ async def save_page_pdf(page_url: str, save_pdf_path: str):
         html = await page.content()
         article = await fetch_webpage_content(html)
 
-        if not save_pdf_path.endswith(os.sep):
-            save_pdf_path = save_pdf_path + os.sep
-        save_pdf_path = save_pdf_path + article['title'] + '.pdf'
-
         # 生成 PDF
-        await page.pdf(
-            path=save_pdf_path,
+        article["bytes"] = await page.pdf(
             format='A5',
             print_background=True,
             margin=dict(top='72px', bottom='72px', left='72px', right='72px')
@@ -34,24 +27,6 @@ async def save_page_pdf(page_url: str, save_pdf_path: str):
 
         await browser.close()
         return article
-
-
-# 使用 Playwright 获取动态渲染后的 HTML
-async def fetch_dynamic_content(url: str):
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)  # 无头模式
-        page = await browser.new_page()
-        await page.goto(url)
-
-        # # 等待页面加载，可以根据需要调整时间
-        # await page.wait_for_timeout(3000)  # 等待 3 秒
-        # 等待指定的 div 元素出现 (等待 class 为 content 的 div)
-        await page.wait_for_selector('div.content')
-
-        # 获取动态渲染后的 HTML
-        html = await page.content()
-        await browser.close()
-        return html
 
 
 async def fetch_webpage_content(html: str):
