@@ -1,5 +1,8 @@
 from typing import Callable, Dict, Text, TypeAlias, TypeVar, Union
 
+from pymongo.collection import Collection
+from minio import Minio
+
 from langchain.agents.agent import AgentExecutor
 from langchain.chains.base import Chain
 from langchain.memory.chat_memory import BaseChatMemory
@@ -71,4 +74,6 @@ CUSTOM_COMPONENT_SUPPORTED_TYPES = {
     "Callable": Callable,
     "LanguageModel": LanguageModel,
     "Retriever": Retriever,
+    "Collection": Collection,
+    "Minio": Minio,
 }

@@ -1,6 +1,7 @@
 from langflow.custom import Component
 from langflow.inputs import HandleInput
 from langflow.io import StrInput, Output
+from pymongo.collection import Collection
 
 
 class WudaoSaveFileComponent(Component):
@@ -29,15 +30,15 @@ class WudaoSaveFileComponent(Component):
             name="minio",
             display_name="MinIO",
             required=True,
-            input_types=["object"],
+            input_types=["Minio"],
             info="The MinIO",
         ),
         HandleInput(
             name="mongo",
-            display_name="MongoDB",
+            display_name="MongoDB Collection",
             required=True,
-            input_types=["object"],
-            info="The MongoDB",
+            input_types=["Collection"],
+            info="The MongoDB Collection",
         ),
 
     ]
@@ -46,7 +47,9 @@ class WudaoSaveFileComponent(Component):
         Output(display_name="Chunks", name="chunks", method="save_data"),
     ]
 
-    async def save_data(self) -> str:
-        print(self.article)
+    def save_data(self) -> str:
+        print(self.mongo)
+        print(self.minio)
+
         self.status = self.article['title']
         return "chunks"

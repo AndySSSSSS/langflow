@@ -46,7 +46,7 @@ class WudaoMinioComponent(Component):
         Output(display_name="MinIO", name="minio", method="get_minio"),
     ]
 
-    async def get_minio(self) -> object:
+    async def get_minio(self) -> Minio:
         minio_client = Minio(
             self.endpoint,  # 替换为 MinIO 服务器地址
             access_key=self.access_key,  # 替换为 MinIO 的 Access Key

@@ -1,7 +1,8 @@
 from pymongo import MongoClient
+from pymongo.collection import Collection
 
 from langflow.custom import Component
-from langflow.io import StrInput, IntInput, SecretStrInput, Output
+from langflow.io import StrInput, IntInput, Output
 
 
 class WudaoMongoDBComponent(Component):
@@ -12,8 +13,8 @@ class WudaoMongoDBComponent(Component):
 
     inputs = [
         StrInput(
-            name="ip",
-            display_name="IP",
+            name="host",
+            display_name="Host",
             required=True,
             value="localhost",
         ),
@@ -24,14 +25,14 @@ class WudaoMongoDBComponent(Component):
             value=17017,
         ),
         StrInput(
-            name="database",
+            name="database_name",
             display_name="Database",
             required=True,
             value="gx",
             info="数据库名",
         ),
         StrInput(
-            name="collection",
+            name="collection_name",
             display_name="Collection",
             required=True,
             value="files",
@@ -43,7 +44,7 @@ class WudaoMongoDBComponent(Component):
             required=True,
             value="admin",
         ),
-        SecretStrInput(
+        StrInput(
             name="password",
             display_name="Password",
             required=True,
@@ -55,39 +56,17 @@ class WudaoMongoDBComponent(Component):
         Output(display_name="MongoDB", name="mongodb", method="get_mongodb"),
     ]
 
-    def get_mongodb(self) -> object:
-        # # 连接到MongoDB
-        # client = MongoClient(self.ip, self.port)
-        #
-        # # 连接到指定的数据库并进行认证
-        # db = client[self.database]
-        # db.authenticate(self.username, self.password)
-        #
-        # # 现在可以对数据库进行操作了
-        # collection = db[self.collection]
-        #
-        # self.status = self.ip + ":" + str(self.port) + "/" + self.endpoint
-        #
-        # return collection
+    def get_mongodb(self) -> Collection:
+        # 构建 MongoDB 连接字符串
+        uri = f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}"
 
-        try:
-            from pymongo import MongoClient
-        except ImportError:
-            raise ImportError("Please install pymongo to use MongoDB Atlas Vector Store")
+        # 连接到 MongoDB
+        client = MongoClient(uri)
 
-        try:
-            mongo_client: MongoClient = MongoClient(self.ip, self.port)
-            collection = mongo_client[self.database][self.collection]
-            if collection:
-                self.status = self.ip + ":" + str(self.port) + "/" + self.endpoint
-                # 查询所有文档
-                results = collection.find()
+        # 选择数据库和集合
+        db = client[self.database_name]
+        collection = db[self.collection_name]
 
-                # 遍历查询结果
-                for doc in results:
-                    print(doc)
-                return collection
-        except Exception as e:
-            raise ValueError(f"Failed to connect to MongoDB Atlas: {e}")
+        self.status = uri
 
-        return None
+        return collection
