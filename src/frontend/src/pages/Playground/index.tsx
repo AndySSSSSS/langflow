@@ -1,5 +1,4 @@
 import { useGetRefreshFlows } from "@/controllers/API/queries/flows/use-get-refresh-flows";
-import { useGetGlobalVariables } from "@/controllers/API/queries/variables";
 import { useCustomNavigate } from "@/customization/hooks/use-custom-navigate";
 import { track } from "@/customization/utils/analytics";
 import { useStoreStore } from "@/stores/storeStore";
@@ -25,12 +24,12 @@ export default function PlaygroundPage() {
   }
 
   const navigate = useCustomNavigate();
-  useGetGlobalVariables();
 
   const currentFlowId = useFlowsManagerStore((state) => state.currentFlowId);
   const { mutateAsync: refreshFlows } = useGetRefreshFlows();
   const setIsLoading = useFlowsManagerStore((state) => state.setIsLoading);
   const getTypes = useTypesStore((state) => state.getTypes);
+  const types = useTypesStore((state) => state.types);
 
   // Set flow tab id
   useEffect(() => {
@@ -51,7 +50,7 @@ export default function PlaygroundPage() {
       } else if (!flows) {
         setIsLoading(true);
         await refreshFlows(undefined);
-        await getTypes();
+        if (!types || Object.keys(types).length === 0) await getTypes();
         setIsLoading(false);
       }
     };

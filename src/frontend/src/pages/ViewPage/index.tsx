@@ -1,5 +1,4 @@
 import { useGetRefreshFlows } from "@/controllers/API/queries/flows/use-get-refresh-flows";
-import { useGetGlobalVariables } from "@/controllers/API/queries/variables";
 import { useCustomNavigate } from "@/customization/hooks/use-custom-navigate";
 import { useTypesStore } from "@/stores/typesStore";
 import { useEffect } from "react";
@@ -12,13 +11,13 @@ export default function ViewPage() {
 
   const { id } = useParams();
   const navigate = useCustomNavigate();
-  useGetGlobalVariables();
 
   const flows = useFlowsManagerStore((state) => state.flows);
   const currentFlowId = useFlowsManagerStore((state) => state.currentFlowId);
   const { mutateAsync: refreshFlows } = useGetRefreshFlows();
   const setIsLoading = useFlowsManagerStore((state) => state.setIsLoading);
   const getTypes = useTypesStore((state) => state.getTypes);
+  const types = useTypesStore((state) => state.types);
 
   // Set flow tab id
   useEffect(() => {
@@ -35,7 +34,7 @@ export default function ViewPage() {
       } else if (!flows) {
         setIsLoading(true);
         await refreshFlows(undefined);
-        await getTypes();
+        if (!types || Object.keys(types).length === 0) await getTypes();
         setIsLoading(false);
       }
     };

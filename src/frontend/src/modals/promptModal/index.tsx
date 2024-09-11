@@ -1,5 +1,5 @@
 import { usePostValidatePrompt } from "@/controllers/API/queries/nodes/use-post-validate-prompt";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import IconComponent from "../../components/genericIconComponent";
 import Dropdown from "../../components/dropdownComponent";
 import SanitizedHTMLWrapper from "../../components/sanitizedHTMLWrapper";
@@ -179,11 +179,43 @@ export default function PromptModal({
     setInputValue(WUDAO_PROMPT_SAMPLES[prompt_id])
   }
 
+  const handlePreviewClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isEdit && !readonly) {
+      const clickX = e.clientX;
+      const clickY = e.clientY;
+      setClickPosition({ x: clickX, y: clickY });
+      setScrollPosition(e.currentTarget.scrollTop);
+      setIsEdit(true);
+    }
+  };
+
+  useEffect(() => {
+    if (isEdit && textareaRef.current) {
+      textareaRef.current.focus();
+      textareaRef.current.scrollTop = scrollPosition;
+
+      const textArea = textareaRef.current;
+      const { x, y } = clickPosition;
+
+      // Use caretPositionFromPoint to get the closest text position. Does not work on Safari.
+      if ("caretPositionFromPoint" in document) {
+        let range = (document as any).caretPositionFromPoint(x, y)?.offset ?? 0;
+        if (range) {
+          const position = range;
+          textArea.setSelectionRange(position, position);
+        }
+      }
+    } else if (!isEdit && previewRef.current) {
+      previewRef.current.scrollTop = scrollPosition;
+    }
+  }, [isEdit, clickPosition, scrollPosition]);
+
   return (
     <BaseModal
       onChangeOpenModal={(open) => {}}
       open={modalOpen}
       setOpen={setModalOpen}
+      size="x-large"
     >
       <BaseModal.Trigger disable={disabled} asChild>
         {children}
@@ -220,10 +252,11 @@ export default function PromptModal({
             <Textarea
               id={"modal-" + id}
               data-testid={"modal-" + id}
-              ref={divRefPrompt}
-              className="form-input h-full w-full resize-none rounded-lg custom-scroll focus-visible:ring-1"
+              ref={textareaRef}
+              className="form-input h-full w-full resize-none rounded-lg border-0 custom-scroll focus-visible:ring-1"
               value={inputValue}
               onBlur={() => {
+                setScrollPosition(textareaRef.current?.scrollTop || 0);
                 setIsEdit(false);
               }}
               autoFocus
@@ -238,11 +271,10 @@ export default function PromptModal({
             />
           ) : (
             <SanitizedHTMLWrapper
+              ref={previewRef}
               className={getClassByNumberLength() + " bg-muted"}
+              onClick={handlePreviewClick}
               content={coloredContent}
-              onClick={() => {
-                if (!readonly) setIsEdit(true);
-              }}
               suppressWarning={true}
             />
           )}

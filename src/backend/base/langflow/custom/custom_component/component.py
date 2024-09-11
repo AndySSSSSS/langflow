@@ -1,17 +1,19 @@
 import inspect
+from collections.abc import Callable
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any, ClassVar, get_type_hints
-from collections.abc import Callable
 from uuid import UUID
 
 import nanoid  # type: ignore
 import yaml
 from pydantic import BaseModel
 
+from langflow.events.event_manager import EventManager
 from langflow.graph.state.model import create_state_model
 from langflow.helpers.custom import format_type
 from langflow.schema.artifact import get_artifact_type, post_process_raw
 from langflow.schema.data import Data
+from langflow.schema.log import LoggableType
 from langflow.schema.message import Message
 from langflow.services.tracing.schema import Log
 from langflow.template.field.base import UNDEFINED, Input, Output
@@ -35,11 +37,11 @@ class Component(CustomComponent):
     outputs: list[Output] = []
     code_class_base_inheritance: ClassVar[str] = "Component"
     _output_logs: dict[str, Log] = {}
+    _current_output: str = ""
 
     def __init__(self, **kwargs):
         # if key starts with _ it is a config
         # else it is an input
-        self._reset_all_output_values()
         inputs = {}
         config = {}
         for key, value in kwargs.items():
@@ -50,12 +52,14 @@ class Component(CustomComponent):
             else:
                 inputs[key] = value
         self._inputs: dict[str, "InputTypes"] = {}
-        self._outputs: dict[str, Output] = {}
+        self._outputs_map: dict[str, Output] = {}
         self._results: dict[str, Any] = {}
         self._attributes: dict[str, Any] = {}
         self._parameters = inputs or {}
         self._edges: list[EdgeData] = []
         self._components: list[Component] = []
+        self._current_output = ""
+        self._event_manager: EventManager | None = None
         self._state_model = None
         self.set_attributes(self._parameters)
         self._output_logs = {}
@@ -64,6 +68,7 @@ class Component(CustomComponent):
             config |= {"_id": f"{self.__class__.__name__}-{nanoid.generate(size=5)}"}
         self.__inputs = inputs
         self.__config = config
+        self._reset_all_output_values()
         super().__init__(**config)
         if hasattr(self, "_trace_type"):
             self.trace_type = self._trace_type
@@ -77,9 +82,13 @@ class Component(CustomComponent):
         self._set_output_types()
         self.set_class_code()
 
+    def set_event_manager(self, event_manager: EventManager | None = None):
+        self._event_manager = event_manager
+
     def _reset_all_output_values(self):
-        for output in self.outputs:
-            setattr(output, "value", UNDEFINED)
+        if isinstance(self._outputs_map, dict):
+            for output in self._outputs_map.values():
+                setattr(output, "value", UNDEFINED)
 
     def _build_state_model(self):
         if self._state_model:
@@ -87,7 +96,7 @@ class Component(CustomComponent):
         name = self.name or self.__class__.__name__
         model_name = f"{name}StateModel"
         fields = {}
-        for output in self.outputs:
+        for output in self._outputs_map.values():
             fields[output.name] = getattr(self, output.method)
         self._state_model = create_state_model(model_name=model_name, **fields)
         return self._state_model
@@ -108,7 +117,7 @@ class Component(CustomComponent):
         kwargs["inputs"] = deepcopy(self.__inputs)
         new_component = type(self)(**kwargs)
         new_component._code = self._code
-        new_component._outputs = self._outputs
+        new_component._outputs_map = self._outputs_map
         new_component._inputs = self._inputs
         new_component._edges = self._edges
         new_component._components = self._components
@@ -159,7 +168,7 @@ class Component(CustomComponent):
         """
         Returns a list of output names.
         """
-        return [_output.name for _output in self.outputs]
+        return [_output.name for _output in self._outputs_map.values()]
 
     async def run(self):
         """
@@ -212,8 +221,8 @@ class Component(CustomComponent):
         Raises:
             ValueError: If the output with the specified name is not found.
         """
-        if name in self._outputs:
-            return self._outputs[name]
+        if name in self._outputs_map:
+            return self._outputs_map[name]
         raise ValueError(f"Output {name} not found in {self.__class__.__name__}")
 
     def set_on_output(self, name: str, **kwargs):
@@ -224,8 +233,8 @@ class Component(CustomComponent):
             setattr(output, key, value)
 
     def set_output_value(self, name: str, value: Any):
-        if name in self._outputs:
-            self._outputs[name].value = value
+        if name in self._outputs_map:
+            self._outputs_map[name].value = value
         else:
             raise ValueError(f"Output {name} not found in {self.__class__.__name__}")
 
@@ -242,11 +251,12 @@ class Component(CustomComponent):
         Returns:
             None
         """
-        self.outputs = outputs
         for output in outputs:
             if output.name is None:
                 raise ValueError("Output name cannot be None.")
-            self._outputs[output.name] = output
+            # Deepcopy is required to avoid modifying the original component;
+            # allows each instance of each component to modify its own output
+            self._outputs_map[output.name] = deepcopy(output)
 
     def map_inputs(self, inputs: list["InputTypes"]):
         """
@@ -259,11 +269,10 @@ class Component(CustomComponent):
             ValueError: If the input name is None.
 
         """
-        self.inputs = inputs
         for input_ in inputs:
             if input_.name is None:
                 raise ValueError("Input name cannot be None.")
-            self._inputs[input_.name] = input_
+            self._inputs[input_.name] = deepcopy(input_)
 
     def validate(self, params: dict):
         """
@@ -280,7 +289,7 @@ class Component(CustomComponent):
         self._validate_outputs()
 
     def _set_output_types(self):
-        for output in self.outputs:
+        for output in self._outputs_map.values():
             return_types = self._get_method_return_type(output.method)
             output.add_types(return_types)
             output.set_selected()
@@ -288,7 +297,7 @@ class Component(CustomComponent):
     def get_output_by_method(self, method: Callable):
         # method is a callable and output.method is a string
         # we need to find the output that has the same method
-        output = next((output for output in self.outputs if output.method == method.__name__), None)
+        output = next((output for output in self._outputs_map.values() if output.method == method.__name__), None)
         if output is None:
             method_name = method.__name__ if hasattr(method, "__name__") else str(method)
             raise ValueError(f"Output with method {method_name} not found")
@@ -318,7 +327,7 @@ class Component(CustomComponent):
 
     def _find_matching_output_method(self, value: "Component"):
         # get all outputs of the value component
-        outputs = value.outputs
+        outputs = value._outputs_map.values()
         # check if the any of the types in the output.types matches ONLY one input in the current component
         matching_pairs = []
         for output in outputs:
@@ -434,8 +443,8 @@ class Component(CustomComponent):
             return self.__dict__["_attributes"][name]
         if "_inputs" in self.__dict__ and name in self.__dict__["_inputs"]:
             return self.__dict__["_inputs"][name].value
-        if "_outputs" in self.__dict__ and name in self.__dict__["_outputs"]:
-            return self.__dict__["_outputs"][name]
+        if "_outputs_map" in self.__dict__ and name in self.__dict__["_outputs_map"]:
+            return self.__dict__["_outputs_map"][name]
         if name in BACKWARDS_COMPATIBLE_ATTRIBUTES:
             return self.__dict__[f"_{name}"]
         if name.startswith("_") and name[1:] in BACKWARDS_COMPATIBLE_ATTRIBUTES:
@@ -496,6 +505,8 @@ class Component(CustomComponent):
         #! works and then update this later
         field_config = self.get_template_config(self)
         frontend_node = ComponentFrontendNode.from_inputs(**field_config)
+        for key, value in self._inputs.items():
+            frontend_node.set_field_load_from_db_in_template(key, False)
         self._map_parameters_on_frontend_node(frontend_node)
 
         frontend_node_dict = frontend_node.to_dict(keep_name=False)
@@ -532,7 +543,9 @@ class Component(CustomComponent):
             "data": {
                 "node": frontend_node.to_dict(keep_name=False),
                 "type": self.name or self.__class__.__name__,
-            }
+                "id": self._id,
+            },
+            "id": self._id,
         }
         return data
 
@@ -566,7 +579,7 @@ class Component(CustomComponent):
         self.outputs = [Output(**output) for output in outputs]
         for output in self.outputs:
             setattr(self, output.name, output)
-            self._outputs[output.name] = output
+            self._outputs_map[output.name] = output
 
     def get_trace_as_inputs(self):
         predefined_inputs = {
@@ -597,7 +610,9 @@ class Component(CustomComponent):
     async def _build_without_tracing(self):
         return await self._build_results()
 
-    async def build_results(self):
+    async def build_results(
+        self,
+    ):
         if self._tracing_service:
             return await self._build_with_tracing()
         return await self._build_without_tracing()
@@ -606,7 +621,7 @@ class Component(CustomComponent):
         _results = {}
         _artifacts = {}
         if hasattr(self, "outputs"):
-            for output in self.outputs:
+            for output in self._outputs_map.values():
                 # Build the output if it's connected to some other vertex
                 # or if it's not connected to any vertex
                 if (
@@ -616,6 +631,7 @@ class Component(CustomComponent):
                 ):
                     if output.method is None:
                         raise ValueError(f"Output {output.name} does not have a method defined.")
+                    self._current_output = output.name
                     method: Callable = getattr(self, output.method)
                     if output.cache and output.value != UNDEFINED:
                         _results[output.name] = output.value
@@ -634,6 +650,7 @@ class Component(CustomComponent):
                             result.set_flow_id(self._vertex.graph.flow_id)
                         _results[output.name] = result
                         output.value = result
+
                     custom_repr = self.custom_repr()
                     if custom_repr is None and isinstance(result, (dict, Data, str)):
                         custom_repr = result
@@ -661,6 +678,7 @@ class Component(CustomComponent):
                     _artifacts[output.name] = artifact
                     self._output_logs[output.name] = self._logs
                     self._logs = []
+                    self._current_output = ""
         self._artifacts = _artifacts
         self._results = _results
         if self._tracing_service:
@@ -716,6 +734,25 @@ class Component(CustomComponent):
         return ComponentTool(component=self)
 
     def get_project_name(self):
-        if hasattr(self, "_tracing_service"):
+        if hasattr(self, "_tracing_service") and self._tracing_service:
             return self._tracing_service.project_name
         return "Langflow"
+
+    def log(self, message: LoggableType | list[LoggableType], name: str | None = None):
+        """
+        Logs a message.
+
+        Args:
+            message (LoggableType | list[LoggableType]): The message to log.
+        """
+        if name is None:
+            name = f"Log {len(self._logs) + 1}"
+        log = Log(message=message, type=get_artifact_type(message), name=name)
+        self._logs.append(log)
+        if self._tracing_service and self._vertex:
+            self._tracing_service.add_log(trace_name=self.trace_name, log=log)
+        if self._event_manager is not None and self._current_output:
+            data = log.model_dump()
+            data["output"] = self._current_output
+            data["component_id"] = self._id
+            self._event_manager.on_log(data=data)
