@@ -1,3 +1,5 @@
+from pymongo import MongoClient
+
 from langflow.custom import Component
 from langflow.io import StrInput, IntInput, SecretStrInput, Output
 
