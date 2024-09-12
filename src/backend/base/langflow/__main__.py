@@ -303,39 +303,39 @@ def stylize_text(text: str, to_style: str, is_prerelease: bool) -> str:
 
 
 def print_banner(host: str, port: int):
-    notices = []
-    package_names = []  # Track package names for pip install instructions
-    is_pre_release = False  # Track if any package is a pre-release
-    package_name = ""
+    # notices = []
+    # package_names = []  # Track package names for pip install instructions
+    # is_pre_release = False  # Track if any package is a pre-release
+    # package_name = ""
+    #
+    # # Use langflow.utils.version to get the version info
+    # version_info = get_version_info()
+    # langflow_version = version_info["version"]
+    # package_name = version_info["package"]
+    # is_pre_release |= langflow_is_pre_release(langflow_version)  # Update pre-release status
 
-    # Use langflow.utils.version to get the version info
-    version_info = get_version_info()
-    langflow_version = version_info["version"]
-    package_name = version_info["package"]
-    is_pre_release |= langflow_is_pre_release(langflow_version)  # Update pre-release status
+    # notice = build_version_notice(langflow_version, package_name)
+    # notice = stylize_text(notice, package_name, is_pre_release)
+    # if notice:
+    #     notices.append(notice)
+    # package_names.append(package_name)
+    #
+    # # Generate pip command based on the collected data
+    # pip_command = generate_pip_command(package_names, is_pre_release)
+    #
+    # # Add pip install command to notices if any package needs an update
+    # if notices:
+    #     notices.append(f"Run '{pip_command}' to update.")
 
-    notice = build_version_notice(langflow_version, package_name)
-    notice = stylize_text(notice, package_name, is_pre_release)
-    if notice:
-        notices.append(notice)
-    package_names.append(package_name)
+    # styled_notices = [f"[bold]{notice}[/bold]" for notice in notices if notice]
+    # styled_package_name = stylize_text(package_name, package_name, any("pre-release" in notice for notice in notices))
 
-    # Generate pip command based on the collected data
-    pip_command = generate_pip_command(package_names, is_pre_release)
-
-    # Add pip install command to notices if any package needs an update
-    if notices:
-        notices.append(f"Run '{pip_command}' to update.")
-
-    styled_notices = [f"[bold]{notice}[/bold]" for notice in notices if notice]
-    styled_package_name = stylize_text(package_name, package_name, any("pre-release" in notice for notice in notices))
-
-    title = f"[bold]Welcome to :chains: {styled_package_name}[/bold]\n"
-    info_text = "Collaborate, and contribute at our [bold][link=https://github.com/langflow-ai/langflow]GitHub Repo[/link][/bold] :star2:"
-    telemetry_text = "We collect anonymous usage data to improve Langflow.\nYou can opt-out by setting [bold]DO_NOT_TRACK=true[/bold] in your environment."
+    title = f"[bold]Welcome to WuDao AI Platform[/bold]\n"
+    # info_text = "Collaborate, and contribute at our [bold][link=https://github.com/langflow-ai/langflow]GitHub Repo[/link][/bold] :star2:"
+    # telemetry_text = "We collect anonymous usage data to improve Langflow.\nYou can opt-out by setting [bold]DO_NOT_TRACK=true[/bold] in your environment."
     access_link = f"Access [link=http://{host}:{port}]http://{host}:{port}[/link]"
 
-    panel_content = "\n\n".join([title, *styled_notices, info_text, telemetry_text, access_link])
+    panel_content = "\n\n".join([title, access_link])
     panel = Panel(panel_content, box=box.ROUNDED, border_style="blue", expand=False)
     rprint(panel)
 
