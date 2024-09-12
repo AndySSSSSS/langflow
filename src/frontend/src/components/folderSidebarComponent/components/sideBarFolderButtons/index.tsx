@@ -390,7 +390,7 @@ const SideBarFoldersButtonsComponent = ({
                         size={"icon"}
                       >
                         <IconComponent
-                          name={"trash"}
+                          name={"Trash2"}
                           className="w-4 stroke-[1.5] p-0"
                         />
                       </Button>
