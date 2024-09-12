@@ -2,6 +2,7 @@ from minio import Minio
 
 from langflow.custom import Component
 from langflow.io import StrInput, BoolInput, Output
+from langflow.schema.message import Message
 
 
 class WudaoMinioComponent(Component):
@@ -39,14 +40,26 @@ class WudaoMinioComponent(Component):
             value=False,
             info="如果使用的是 HTTP 而非 HTTPS，设置为 False",
         ),
+        StrInput(
+            name="bucket_name",
+            display_name="Bucket of MinIO",
+            value="files",
+            required=True,
+            input_types=["str"],
+            info="The article to save",
+        ),
 
     ]
 
     outputs = [
         Output(display_name="MinIO", name="minio", method="get_minio"),
+        Output(display_name="Bucket", name="bucket", method="get_bucket"),
     ]
 
-    async def get_minio(self) -> Minio:
+    def get_bucket(self) -> Message:
+        return Message(text=self.bucket_name)
+
+    def get_minio(self) -> Minio:
         minio_client = Minio(
             self.endpoint,  # 替换为 MinIO 服务器地址
             access_key=self.access_key,  # 替换为 MinIO 的 Access Key

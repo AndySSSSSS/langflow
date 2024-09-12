@@ -1,10 +1,14 @@
+from datetime import timedelta
+from io import BytesIO
+
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 
 from langflow.utils.wudao.const_html_page import EXP_GONG_XIAO_NEWS
+from langflow.utils.wudao.tool_date import normalize_date
 
 
-async def save_page_pdf(page_url: str):
+async def save_page_pdf(page_url: str, minio_client, bucket_name):
     async with async_playwright() as p:
         browser = await p.chromium.launch()
         page = await browser.new_page()
@@ -19,11 +23,24 @@ async def save_page_pdf(page_url: str):
         article = await fetch_webpage_content(html)
 
         # 生成 PDF
-        article["bytes"] = await page.pdf(
+        pdf_bytes = await page.pdf(
             format='A5',
             print_background=True,
             margin=dict(top='72px', bottom='72px', left='72px', right='72px')
         )
+
+        pdf_stream = BytesIO(pdf_bytes)
+        filename = article['title'] + '.pdf'
+        minio_client.put_object(
+            bucket_name,
+            filename,
+            pdf_stream,
+            length=len(pdf_bytes),
+            content_type='application/pdf'
+        )
+
+        presigned_url = minio_client.presigned_get_object(bucket_name, filename, expires=timedelta(days=7))
+        article['presigned_url'] = presigned_url
 
         await browser.close()
         return article
@@ -60,7 +77,7 @@ async def fetch_webpage_content(html: str):
 
     article = {
         "title": title,
-        "time": time,
+        "time": normalize_date(time),
         "content": content
     }
 

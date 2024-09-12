@@ -58,7 +58,7 @@ class WudaoMongoDBComponent(Component):
 
     def get_mongodb(self) -> Collection:
         # 构建 MongoDB 连接字符串
-        uri = f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}"
+        uri = f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}"
 
         # 连接到 MongoDB
         client = MongoClient(uri)

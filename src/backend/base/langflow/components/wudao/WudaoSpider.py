@@ -1,5 +1,10 @@
+from datetime import timedelta
+from io import BytesIO
+
+from minio import Minio
+
 from langflow.custom import Component
-from langflow.io import StrInput, MessageTextInput, Output
+from langflow.io import StrInput, MessageTextInput, HandleInput, Output
 from langflow.utils.wudao.tool_playwright import save_page_pdf
 
 
@@ -16,6 +21,18 @@ class WudaoSpiderComponent(Component):
             required=True,
             info="The URL to scrape or crawl",
         ),
+        HandleInput(
+            name="minio",
+            display_name="MinIO",
+            required=True,
+            input_types=["Minio"],
+            info="The MinIO",
+        ),
+        MessageTextInput(
+            name="bucket_name",
+            display_name="Bucket of MinIO",
+            required=True,
+        ),
         StrInput(
             name="type",
             display_name="File Type",
@@ -30,7 +47,10 @@ class WudaoSpiderComponent(Component):
     ]
 
     async def save_page_data(self) -> dict:
-        article = await save_page_pdf(self.url)
+        minio = self.minio if isinstance(self.minio, Minio) else self.minio
+        # 获取文章
+        article = await save_page_pdf(self.url, minio, self.bucket_name)
         article['type'] = self.type
+        article["bucket_name"] = self.bucket_name
         self.status = article['title']
         return article

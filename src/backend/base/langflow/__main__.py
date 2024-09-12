@@ -105,7 +105,7 @@ def run(
         envvar="LANGFLOW_FRONTEND_PATH",
     ),
     open_browser: bool = typer.Option(
-        True,
+        False,
         help="Open the browser after starting the server.",
         envvar="LANGFLOW_OPEN_BROWSER",
     ),
