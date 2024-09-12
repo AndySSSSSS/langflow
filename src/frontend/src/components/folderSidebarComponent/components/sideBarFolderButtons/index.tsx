@@ -326,7 +326,7 @@ const SideBarFoldersButtonsComponent = ({
                     className="flex w-full items-center gap-2"
                   >
                     <IconComponent
-                      name={"folder"}
+                      name={"FolderIcon"}
                       className="mr-2 w-4 flex-shrink-0 justify-start stroke-[1.5] opacity-100"
                     />
                     {editFolderName?.edit ? (
