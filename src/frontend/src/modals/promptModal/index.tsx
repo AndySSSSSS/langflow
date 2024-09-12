@@ -1,12 +1,14 @@
 import { usePostValidatePrompt } from "@/controllers/API/queries/nodes/use-post-validate-prompt";
 import React, { useEffect, useRef, useState } from "react";
 import IconComponent from "../../components/genericIconComponent";
-import Dropdown from "../../components/dropdownComponent";
 import SanitizedHTMLWrapper from "../../components/sanitizedHTMLWrapper";
 import ShadTooltip from "../../components/shadTooltipComponent";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
+import {usePromptStore} from "@/stores/promptStore";
+import {useGetPromptQuery} from "@/controllers/API/queries/prompt";
+import InputComponent from "@/components/inputComponent";
 import {
   BUG_ALERT,
   PROMPT_ERROR_ALERT,
@@ -20,16 +22,12 @@ import {
   PROMPT_DIALOG_SUBTITLE,
   regexHighlight,
 } from "../../constants/constants";
-import {WUDAO_PROMPT_SAMPLES} from "../../constants/wudao_constants_prompt";
-import InputComponent from "@/components/inputComponent";
 import useAlertStore from "../../stores/alertStore";
 import { PromptModalType } from "../../types/components";
 import { handleKeyDown } from "../../utils/reactflowUtils";
 import { classNames } from "../../utils/utils";
 import BaseModal from "../baseModal";
 import varHighlightHTML from "./utils/var-highlight-html";
-import {usePromptStore} from "@/stores/promptStore";
-import {useGetPromptQuery} from "@/controllers/API/queries/prompt";
 
 export default function PromptModal({
   field_name = "",
@@ -48,13 +46,17 @@ export default function PromptModal({
   const [wordsHighlight, setWordsHighlight] = useState<Set<string>>(new Set());
   const [wudaoPromptSamples, setWudaoPromptSamples] = useState<object>({});
   const [wudaoPromptSampleKeys, setWudaoPromptSampleKeys] = useState<string[]>([]);
+  const promptList = usePromptStore((state) => state.promptList);
   const setSuccessData = useAlertStore((state) => state.setSuccessData);
   const setErrorData = useAlertStore((state) => state.setErrorData);
   const setNoticeData = useAlertStore((state) => state.setNoticeData);
-  const promptList = usePromptStore((state) => state.promptList);
   const divRef = useRef(null);
   const divRefPrompt = useRef(null);
   const { mutate: postValidatePrompt } = usePostValidatePrompt();
+  const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 });
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useGetPromptQuery({});
 
@@ -189,10 +191,6 @@ export default function PromptModal({
     );
   }
 
-  function set_sample_prompt(prompt_id: string):void {
-    setInputValue(wudaoPromptSamples[prompt_id].content);
-  }
-
   const handlePreviewClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isEdit && !readonly) {
       const clickX = e.clientX;
@@ -223,6 +221,10 @@ export default function PromptModal({
       previewRef.current.scrollTop = scrollPosition;
     }
   }, [isEdit, clickPosition, scrollPosition]);
+
+  function set_sample_prompt(prompt_id: string):void {
+    setInputValue(wudaoPromptSamples[prompt_id].content);
+  }
 
   return (
     <BaseModal
@@ -263,34 +265,34 @@ export default function PromptModal({
         </div>
         <div className={classNames("flex h-full w-full rounded-lg border")}>
           {isEdit && !readonly ? (
-            <Textarea
-              id={"modal-" + id}
-              data-testid={"modal-" + id}
-              ref={textareaRef}
-              className="form-input h-full w-full resize-none rounded-lg border-0 custom-scroll focus-visible:ring-1"
-              value={inputValue}
-              onBlur={() => {
-                setScrollPosition(textareaRef.current?.scrollTop || 0);
-                setIsEdit(false);
-              }}
-              autoFocus
-              onChange={(event) => {
-                setInputValue(event.target.value);
-                checkVariables(event.target.value);
-              }}
-              placeholder={EDIT_TEXT_PLACEHOLDER}
-              onKeyDown={(e) => {
-                handleKeyDown(e, inputValue, "");
-              }}
-            />
+              <Textarea
+                  id={"modal-" + id}
+                  data-testid={"modal-" + id}
+                  ref={textareaRef}
+                  className="form-input h-full w-full resize-none rounded-lg border-0 custom-scroll focus-visible:ring-1"
+                  value={inputValue}
+                  onBlur={() => {
+                    setScrollPosition(textareaRef.current?.scrollTop || 0);
+                    setIsEdit(false);
+                  }}
+                  autoFocus
+                  onChange={(event) => {
+                    setInputValue(event.target.value);
+                    checkVariables(event.target.value);
+                  }}
+                  placeholder={EDIT_TEXT_PLACEHOLDER}
+                  onKeyDown={(e) => {
+                    handleKeyDown(e, inputValue, "");
+                  }}
+              />
           ) : (
-            <SanitizedHTMLWrapper
-              ref={previewRef}
-              className={getClassByNumberLength() + " bg-muted"}
-              onClick={handlePreviewClick}
-              content={coloredContent}
-              suppressWarning={true}
-            />
+              <SanitizedHTMLWrapper
+                  ref={previewRef}
+                  className={getClassByNumberLength() + " bg-muted"}
+                  onClick={handlePreviewClick}
+                  content={coloredContent}
+                  suppressWarning={true}
+              />
           )}
         </div>
       </BaseModal.Content>
@@ -299,11 +301,11 @@ export default function PromptModal({
           <div className="mb-auto flex-1">
             <div className="mr-2">
               <div
-                ref={divRef}
-                className="max-h-20 overflow-y-auto custom-scroll"
+                  ref={divRef}
+                  className="max-h-20 overflow-y-auto custom-scroll"
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <IconComponent
+                <IconComponent
                     name="Braces"
                     className="flex h-4 w-4 text-primary"
                   />
