@@ -75,11 +75,14 @@ build_frontend: ## build the frontend static files
 	@rm -rf src/backend/base/langflow/frontend
 	@cp -r src/frontend/build src/backend/base/langflow/frontend
 
-build_backend: ## add by AndySong
+b: ## add by AndySong
 	make clean_python_cache
 	make install_backend
 	@echo "$(GREEN)All backend requirements are installed.$(NC)"
 	python -m langflow run
+
+f: ## add by AndySong
+	make run_frontend
 
 init: check_tools clean_python_cache clean_npm_cache ## initialize the project
 	@make install_backend
@@ -154,9 +157,22 @@ else
 		$(args)
 endif
 
-integration_tests: ## run integration tests
+unit_tests_looponfail:
+	@make unit_tests args="-f"
+
+integration_tests:
 	poetry run pytest src/backend/tests/integration \
 		--instafail -ra \
+		$(args)
+
+integration_tests_no_api_keys:
+	poetry run pytest src/backend/tests/integration \
+		--instafail -ra -m "not api_key_required" \
+		$(args)
+
+integration_tests_api_keys:
+	poetry run pytest src/backend/tests/integration \
+		--instafail -ra -m "api_key_required" \
 		$(args)
 
 tests: ## run unit, integration, coverage tests
@@ -261,29 +277,28 @@ frontendc: install_frontendc
 	make run_frontend
 
 
-
 backend: setup_env install_backend ## run the backend in development mode
-	@-kill -9 $$(lsof -t -i:7860)
+	@-kill -9 $$(lsof -t -i:7860) || true
 ifdef login
 	@echo "Running backend autologin is $(login)";
 	LANGFLOW_AUTO_LOGIN=$(login) poetry run uvicorn \
 		--factory langflow.main:create_app \
 		--host 0.0.0.0 \
 		--port $(port) \
-		--reload \
+		$(if $(filter-out 1,$(workers)),, --reload) \
 		--env-file $(env) \
 		--loop asyncio \
-		--workers $(workers)
+		$(if $(workers),--workers $(workers),)
 else
 	@echo "Running backend respecting the $(env) file";
 	poetry run uvicorn \
 		--factory langflow.main:create_app \
 		--host 0.0.0.0 \
 		--port $(port) \
-		--reload \
+		$(if $(filter-out 1,$(workers)),, --reload) \
 		--env-file $(env) \
 		--loop asyncio \
-		--workers $(workers)
+		$(if $(workers),--workers $(workers),)
 endif
 
 build_and_run: setup_env ## build the project and run it
@@ -406,6 +421,12 @@ publish_base:
 publish_langflow:
 	poetry publish
 
+publish_base_testpypi:
+	cd src/backend/base && poetry publish --skip-existing -r test-pypi
+
+publish_langflow_testpypi:
+	poetry publish -r test-pypi
+
 publish: ## build the frontend static files and package the project and publish it to PyPI
 	@echo 'Publishing the project'
 ifdef base
@@ -415,3 +436,17 @@ endif
 ifdef main
 	make publish_langflow
 endif
+
+publish_testpypi: ## build the frontend static files and package the project and publish it to PyPI
+	@echo 'Publishing the project'
+
+ifdef base
+	poetry config repositories.test-pypi https://test.pypi.org/legacy/
+	make publish_base_testpypi
+endif
+
+ifdef main
+	poetry config repositories.test-pypi https://test.pypi.org/legacy/
+	make publish_langflow_testpypi
+endif
+

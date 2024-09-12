@@ -50,10 +50,10 @@ export const MenuBar = ({}: {}): JSX.Element => {
   const updatedAt = currentSavedFlow?.updated_at;
   const onFlowPage = useFlowStore((state) => state.onFlowPage);
   const setCurrentFlow = useFlowsManagerStore((state) => state.setCurrentFlow);
+  const stopBuilding = useFlowStore((state) => state.stopBuilding);
 
   const changesNotSaved =
-    customStringify(currentFlow) !== customStringify(currentSavedFlow) &&
-    !autoSaving;
+    customStringify(currentFlow) !== customStringify(currentSavedFlow);
 
   const savedText =
     updatedAt && changesNotSaved
@@ -310,7 +310,7 @@ export const MenuBar = ({}: {}): JSX.Element => {
               disabled={!isBuilding}
               onClick={(_) => {
                 if (isBuilding) {
-                  window.stop();
+                  stopBuilding();
                 }
               }}
               className={

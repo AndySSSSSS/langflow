@@ -17,9 +17,10 @@ const SideBarButtonsComponent = ({
 }: SideBarButtonsComponentProps) => {
   return (
     <div className="flex gap-2 overflow-auto lg:h-[70vh] lg:flex-col">
-      {items.map((item) => (
-        <CustomLink key={item.title} to={item.href!}>
+      {items.map((item, index) => (
+        <CustomLink key={index} to={item.href!}>
           <div
+            key={item.title}
             data-testid={`sidebar-nav-${item.title}`}
             className={cn(
               buttonVariants({ variant: "ghost" }),

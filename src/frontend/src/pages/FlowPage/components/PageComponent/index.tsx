@@ -1,8 +1,14 @@
+import NoteNode from "@/CustomNodes/NoteNode";
+import IconComponent from "@/components/genericIconComponent";
 import LoadingComponent from "@/components/loadingComponent";
+import ShadTooltip from "@/components/shadTooltipComponent";
 import { useGetBuildsQuery } from "@/controllers/API/queries/_builds";
 import { track } from "@/customization/utils/analytics";
 import useAutoSaveFlow from "@/hooks/flows/use-autosave-flow";
 import useUploadFlow from "@/hooks/flows/use-upload-flow";
+import { getNodeRenderType, isSupportedNodeTypes } from "@/utils/utils";
+
+import { ENABLE_MVPS } from "@/customization/feature-flags";
 import _, { cloneDeep } from "lodash";
 import {
   KeyboardEvent,
@@ -16,10 +22,10 @@ import { useHotkeys } from "react-hotkeys-hook";
 import ReactFlow, {
   Background,
   Connection,
+  ControlButton,
   Controls,
   Edge,
   NodeDragHandler,
-  OnMove,
   OnSelectionChangeParams,
   SelectionDragHandler,
   updateEdge,
@@ -55,6 +61,7 @@ import isWrappedWithClass from "./utils/is-wrapped-with-class";
 
 const nodeTypes = {
   genericNode: GenericNode,
+  noteNode: NoteNode,
 };
 
 export default function Page({ view }: { view?: boolean }): JSX.Element {
@@ -298,12 +305,6 @@ export default function Page({ view }: { view?: boolean }): JSX.Element {
     // 👉 you can place your event handlers here
   }, [takeSnapshot]);
 
-  const onMoveEnd: OnMove = useCallback(() => {
-    // 👇 make moving the canvas undoable
-    autoSaveFlow();
-    updateCurrentFlow({ viewport: reactFlowInstance?.getViewport() });
-  }, [takeSnapshot, autoSaveFlow, nodes, edges, reactFlowInstance]);
-
   const onNodeDragStop: NodeDragHandler = useCallback(() => {
     // 👇 make moving the canvas undoable
     autoSaveFlow();
@@ -317,7 +318,7 @@ export default function Page({ view }: { view?: boolean }): JSX.Element {
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
-    if (event.dataTransfer.types.some((types) => types === "nodedata")) {
+    if (event.dataTransfer.types.some((types) => isSupportedNodeTypes(types))) {
       event.dataTransfer.dropEffect = "move";
     } else {
       event.dataTransfer.dropEffect = "copy";
@@ -327,12 +328,16 @@ export default function Page({ view }: { view?: boolean }): JSX.Element {
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-      if (event.dataTransfer.types.some((types) => types === "nodedata")) {
+      if (event.dataTransfer.types.some((type) => isSupportedNodeTypes(type))) {
         takeSnapshot();
+
+        const datakey = event.dataTransfer.types.find((type) =>
+          isSupportedNodeTypes(type),
+        );
 
         // Extract the data from the drag event and parse it as a JSON object
         const data: { type: string; node?: APIClassType } = JSON.parse(
-          event.dataTransfer.getData("nodedata"),
+          event.dataTransfer.getData(datakey!),
         );
 
         track(`Component Added: ${data.node?.display_name}`);
@@ -341,7 +346,7 @@ export default function Page({ view }: { view?: boolean }): JSX.Element {
 
         const newNode: NodeType = {
           id: newId,
-          type: "genericNode",
+          type: getNodeRenderType(datakey!),
           position: { x: 0, y: 0 },
           data: {
             ...data,
@@ -453,7 +458,6 @@ export default function Page({ view }: { view?: boolean }): JSX.Element {
             onSelectionStart={onSelectionStart}
             connectionLineComponent={ConnectionLineComponent}
             onDragOver={onDragOver}
-            onMoveEnd={onMoveEnd}
             onNodeDragStop={onNodeDragStop}
             onDrop={onDrop}
             onSelectionChange={onSelectionChange}
@@ -470,7 +474,60 @@ export default function Page({ view }: { view?: boolean }): JSX.Element {
           >
             <Background className="" />
             {!view && (
-              <Controls className="fill-foreground stroke-foreground text-primary [&>button]:border-b-border [&>button]:bg-muted hover:[&>button]:bg-border"></Controls>
+              <Controls className="fill-foreground stroke-foreground text-primary [&>button]:border-b-border [&>button]:bg-muted hover:[&>button]:bg-border">
+                <ControlButton
+                  data-testid="add_note"
+                  onClick={() => {
+                    const wrapper = reactFlowWrapper.current!;
+                    const viewport = reactFlowInstance?.getViewport();
+                    const x = wrapper.getBoundingClientRect().width / 2;
+                    const y = wrapper.getBoundingClientRect().height / 2;
+                    const nodePosition =
+                      reactFlowInstance?.screenToFlowPosition({ x, y })!;
+
+                    const data = {
+                      node: {
+                        description: "",
+                        display_name: "",
+                        documentation: "",
+                        template: {},
+                      },
+                      type: "note",
+                    };
+                    const newId = getNodeId(data.type);
+
+                    const newNode: NodeType = {
+                      id: newId,
+                      type: "noteNode",
+                      position: { x: 0, y: 0 },
+                      data: {
+                        ...data,
+                        id: newId,
+                      },
+                    };
+                    paste(
+                      { nodes: [newNode], edges: [] },
+                      {
+                        x: nodePosition.x,
+                        y: nodePosition?.y,
+                        paneX: wrapper.getBoundingClientRect().x,
+                        paneY: wrapper.getBoundingClientRect().y,
+                      },
+                    );
+                  }}
+                  className="postion absolute -top-10 rounded-sm"
+                >
+                  <ShadTooltip content="Add note">
+                    <div>
+                      <IconComponent
+                        name="SquarePen"
+                        aria-hidden="true"
+                        className="scale-125"
+                      />
+                    </div>
+                  </ShadTooltip>
+                </ControlButton>
+              </Controls>
             )}
             <SelectionMenu
               lastSelection={lastSelection}

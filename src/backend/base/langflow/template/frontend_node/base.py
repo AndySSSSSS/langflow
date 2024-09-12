@@ -174,6 +174,8 @@ class FrontendNode(BaseModel):
         """Create a frontend node from inputs."""
         if "inputs" not in kwargs:
             raise ValueError("Missing 'inputs' argument.")
+        if "_outputs_maps" in kwargs:
+            kwargs["outputs"] = kwargs.pop("_outputs_maps")
         inputs = kwargs.pop("inputs")
         template = Template(type_name="Component", fields=inputs)
         kwargs["template"] = template
@@ -183,4 +185,10 @@ class FrontendNode(BaseModel):
         for field in self.template.fields:
             if field.name == field_name:
                 field.value = value
+                break
+
+    def set_field_load_from_db_in_template(self, field_name, value):
+        for field in self.template.fields:
+            if field.name == field_name and hasattr(field, "load_from_db"):
+                field.load_from_db = value
                 break

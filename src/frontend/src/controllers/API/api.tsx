@@ -34,7 +34,7 @@ function ApiInterceptor() {
           error?.response?.status === 403 || error?.response?.status === 401;
 
         if (isAuthenticationError) {
-          if (!autoLogin) {
+          if (autoLogin !== undefined && !autoLogin) {
             if (error?.config?.url?.includes("github")) {
               return Promise.reject(error);
             }
@@ -103,8 +103,14 @@ function ApiInterceptor() {
           config.headers["Authorization"] = `Bearer ${accessToken}`;
         }
 
-        for (const [key, value] of Object.entries(customHeaders)) {
-          config.headers[key] = value;
+        const currentOrigin = window.location.origin;
+        const requestUrl = new URL(config?.url as string, currentOrigin);
+
+        const urlIsFromCurrentOrigin = requestUrl.origin === currentOrigin;
+        if (urlIsFromCurrentOrigin) {
+          for (const [key, value] of Object.entries(customHeaders)) {
+            config.headers[key] = value;
+          }
         }
 
         return {
@@ -122,7 +128,7 @@ function ApiInterceptor() {
       api.interceptors.response.eject(interceptor);
       api.interceptors.request.eject(requestInterceptor);
     };
-  }, [accessToken, setErrorData, customHeaders]);
+  }, [accessToken, setErrorData, customHeaders, autoLogin]);
 
   function checkErrorCount() {
     if (isLoginPage) return;
@@ -145,21 +151,18 @@ function ApiInterceptor() {
         error.config.headers[key] = value;
       }
     }
-    mutationRenewAccessToken(
-      {},
-      {
-        onSuccess: async (data) => {
-          authenticationErrorCount = 0;
-          await remakeRequest(error);
-          authenticationErrorCount = 0;
-        },
-        onError: (error) => {
-          console.error(error);
-          mutationLogout();
-          return Promise.reject("Authentication error");
-        },
+    mutationRenewAccessToken(undefined, {
+      onSuccess: async () => {
+        authenticationErrorCount = 0;
+        await remakeRequest(error);
+        authenticationErrorCount = 0;
       },
-    );
+      onError: (error) => {
+        console.error(error);
+        mutationLogout();
+        return Promise.reject("Authentication error");
+      },
+    });
   }
 
   async function clearBuildVerticesState(error) {
@@ -224,6 +227,7 @@ async function performStreamingRequest({
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
   const controller = new AbortController();
+  useFlowStore.getState().setBuildController(controller);
   const params = {
     method: method,
     headers: headers,

@@ -76,22 +76,22 @@ class MongoVectorStoreComponent(LCVectorStoreComponent):
         return vector_store
 
     def search_documents(self) -> List[Data]:
-        from bson import ObjectId
-
-        vector_store = self.build_vector_store()
-
-        if self.search_query and isinstance(self.search_query, str):
-            docs = vector_store.similarity_search(
-                query=self.search_query,
-                k=self.number_of_results,
-            )
-            for doc in docs:
-                doc.metadata = {
-                    key: str(value) if isinstance(value, ObjectId) else value for key, value in doc.metadata.items()
-                }
-
-            data = docs_to_data(docs)
-            self.status = data
-            return data
-        else:
-            return []
+        # from bson import ObjectId
+        #
+        # vector_store = self.build_vector_store()
+        #
+        # if self.search_query and isinstance(self.search_query, str):
+        #     docs = vector_store.similarity_search(
+        #         query=self.search_query,
+        #         k=self.number_of_results,
+        #     )
+        #     for doc in docs:
+        #         doc.metadata = {
+        #             key: str(value) if isinstance(value, ObjectId) else value for key, value in doc.metadata.items()
+        #         }
+        #
+        #     data = docs_to_data(docs)
+        #     self.status = data
+        #     return data
+        # else:
+        return []

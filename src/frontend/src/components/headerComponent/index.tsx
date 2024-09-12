@@ -12,6 +12,7 @@ import { AuthContext } from "../../contexts/authContext";
 
 import { useLogout } from "@/controllers/API/queries/auth";
 import { CustomLink } from "@/customization/components/custom-link";
+import { DOCS_LINK } from "@/customization/config-constants";
 import {
   ENABLE_DARK_MODE,
   ENABLE_PROFILE_ICONS,
@@ -252,32 +253,35 @@ export default function Header(): JSX.Element {
                     )}
                   </>
                 )}
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel>Help</DropdownMenuLabel>
-                <DropdownMenuItem
-                  className="cursor-pointer gap-2"
-                  onClick={() =>
-                    window.open("https://docs.langflow.org/", "_blank")
-                  }
-                >
-                  <ForwardedIconComponent name="FileText" className="w-4" />
-                  Docs
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer gap-2"
-                  onClick={() =>
-                    window.open(
-                      "https://github.com/langflow-ai/langflow/discussions",
-                      "_blank",
-                    )
-                  }
-                >
-                  <ForwardedIconComponent
-                    name="MessagesSquare"
-                    className="w-4"
-                  />
-                  Discussions
-                </DropdownMenuItem>
+                {/*<DropdownMenuSeparator />*/}
+                {/*<DropdownMenuLabel>Help</DropdownMenuLabel>*/}
+                {/*<DropdownMenuItem*/}
+                {/*  className="cursor-pointer gap-2"*/}
+                {/*  onClick={() =>*/}
+                {/*    window.open(*/}
+                {/*      DOCS_LINK || "https://docs.langflow.org/",*/}
+                {/*      "_blank",*/}
+                {/*    )*/}
+                {/*  }*/}
+                {/*>*/}
+                {/*  <ForwardedIconComponent name="FileText" className="w-4" />*/}
+                {/*  Docs*/}
+                {/*</DropdownMenuItem>*/}
+                {/*<DropdownMenuItem*/}
+                {/*  className="cursor-pointer gap-2"*/}
+                {/*  onClick={() =>*/}
+                {/*    window.open(*/}
+                {/*      "https://github.com/langflow-ai/langflow/discussions",*/}
+                {/*      "_blank",*/}
+                {/*    )*/}
+                {/*  }*/}
+                {/*>*/}
+                {/*  <ForwardedIconComponent*/}
+                {/*    name="MessagesSquare"*/}
+                {/*    className="w-4"*/}
+                {/*  />*/}
+                {/*  Discussions*/}
+                {/*</DropdownMenuItem>*/}
                 {!autoLogin && (
                   <>
                     <DropdownMenuSeparator />

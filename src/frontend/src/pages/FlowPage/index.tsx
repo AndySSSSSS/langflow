@@ -1,9 +1,9 @@
 import { useGetRefreshFlows } from "@/controllers/API/queries/flows/use-get-refresh-flows";
-import { useGetGlobalVariables } from "@/controllers/API/queries/variables";
 import { ENABLE_BRANDING } from "@/customization/feature-flags";
 import { useCustomNavigate } from "@/customization/hooks/use-custom-navigate";
 import useSaveFlow from "@/hooks/flows/use-save-flow";
 import { SaveChangesModal } from "@/modals/saveChangesModal";
+import useAlertStore from "@/stores/alertStore";
 import { useTypesStore } from "@/stores/typesStore";
 import { customStringify } from "@/utils/reactflowUtils";
 import { useEffect } from "react";
@@ -19,17 +19,19 @@ export default function FlowPage({ view }: { view?: boolean }): JSX.Element {
   const setCurrentFlow = useFlowsManagerStore((state) => state.setCurrentFlow);
   const currentFlow = useFlowStore((state) => state.currentFlow);
   const currentSavedFlow = useFlowsManagerStore((state) => state.currentFlow);
+  const setSuccessData = useAlertStore((state) => state.setSuccessData);
 
   const changesNotSaved =
     customStringify(currentFlow) !== customStringify(currentSavedFlow) &&
     (currentFlow?.data?.nodes?.length ?? 0) > 0;
 
-  const blocker = useBlocker(changesNotSaved);
+  const isBuilding = useFlowStore((state) => state.isBuilding);
+  const blocker = useBlocker(changesNotSaved || isBuilding);
+
   const version = useDarkStore((state) => state.version);
   const setOnFlowPage = useFlowStore((state) => state.setOnFlowPage);
   const { id } = useParams();
   const navigate = useCustomNavigate();
-  useGetGlobalVariables();
   const saveFlow = useSaveFlow();
 
   const flows = useFlowsManagerStore((state) => state.flows);
@@ -37,18 +39,50 @@ export default function FlowPage({ view }: { view?: boolean }): JSX.Element {
   const { mutateAsync: refreshFlows } = useGetRefreshFlows();
   const setIsLoading = useFlowsManagerStore((state) => state.setIsLoading);
   const getTypes = useTypesStore((state) => state.getTypes);
+  const types = useTypesStore((state) => state.types);
 
   const updatedAt = currentSavedFlow?.updated_at;
 
   const autoSaving = useFlowsManagerStore((state) => state.autoSaving);
 
+  const stopBuilding = useFlowStore((state) => state.stopBuilding);
+
   const handleSave = () => {
-    saveFlow().then(() => (blocker.proceed ? blocker.proceed() : null));
+    let saving = true;
+    let proceed = false;
+    setTimeout(() => {
+      saving = false;
+      if (proceed) {
+        blocker.proceed && blocker.proceed();
+        setSuccessData({
+          title: "Flow saved successfully!",
+        });
+      }
+    }, 1200);
+    saveFlow().then(() => {
+      if (!autoSaving || saving === false) {
+        blocker.proceed && blocker.proceed();
+        setSuccessData({
+          title: "Flow saved successfully!",
+        });
+      }
+      proceed = true;
+    });
+  };
+
+  const handleExit = () => {
+    if (isBuilding) {
+      // Do nothing, let the blocker handle it
+    } else if (changesNotSaved) {
+      if (blocker.proceed) blocker.proceed();
+    } else {
+      navigate("/all");
+    }
   };
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (changesNotSaved) {
+      if (changesNotSaved || isBuilding) {
         event.preventDefault();
         event.returnValue = ""; // Required for Chrome
       }
@@ -59,7 +93,7 @@ export default function FlowPage({ view }: { view?: boolean }): JSX.Element {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [changesNotSaved, navigate]);
+  }, [changesNotSaved, isBuilding]);
 
   // Set flow tab id
   useEffect(() => {
@@ -76,7 +110,7 @@ export default function FlowPage({ view }: { view?: boolean }): JSX.Element {
       } else if (!flows) {
         setIsLoading(true);
         await refreshFlows(undefined);
-        await getTypes();
+        if (!types || Object.keys(types).length === 0) await getTypes();
         setIsLoading(false);
       }
     };
@@ -91,6 +125,27 @@ export default function FlowPage({ view }: { view?: boolean }): JSX.Element {
       setCurrentFlow(undefined);
     };
   }, [id]);
+
+  useEffect(() => {
+    if (
+      blocker.state === "blocked" &&
+      autoSaving &&
+      changesNotSaved &&
+      !isBuilding
+    ) {
+      handleSave();
+    }
+  }, [blocker.state, isBuilding]);
+
+  useEffect(() => {
+    if (blocker.state === "blocked") {
+      if (isBuilding) {
+        stopBuilding();
+      } else if (!changesNotSaved) {
+        blocker.proceed && blocker.proceed();
+      }
+    }
+  }, [blocker.state, isBuilding]);
 
   return (
     <>
@@ -119,26 +174,29 @@ export default function FlowPage({ view }: { view?: boolean }): JSX.Element {
           </a>
         )}
       </div>
-      {blocker.state === "blocked" && currentSavedFlow && (
-        <SaveChangesModal
-          onSave={handleSave}
-          onCancel={() => (blocker.reset ? blocker.reset() : null)}
-          onProceed={() => (blocker.proceed ? blocker.proceed() : null)}
-          flowName={currentSavedFlow.name}
-          unsavedChanges={changesNotSaved}
-          lastSaved={
-            updatedAt
-              ? new Date(updatedAt).toLocaleString("en-US", {
-                  hour: "numeric",
-                  minute: "numeric",
-                  second: "numeric",
-                  month: "numeric",
-                  day: "numeric",
-                })
-              : undefined
-          }
-          autoSave={autoSaving}
-        />
+      {blocker.state === "blocked" && (
+        <>
+          {!isBuilding && currentSavedFlow && (
+            <SaveChangesModal
+              onSave={handleSave}
+              onCancel={() => blocker.reset?.()}
+              onProceed={handleExit}
+              flowName={currentSavedFlow.name}
+              lastSaved={
+                updatedAt
+                  ? new Date(updatedAt).toLocaleString("en-US", {
+                      hour: "numeric",
+                      minute: "numeric",
+                      second: "numeric",
+                      month: "numeric",
+                      day: "numeric",
+                    })
+                  : undefined
+              }
+              autoSave={autoSaving}
+            />
+          )}
+        </>
       )}
     </>
   );
