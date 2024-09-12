@@ -111,7 +111,23 @@ def get_variable_service() -> "VariableService":
     """
     from langflow.services.variable.factory import VariableServiceFactory
 
-    return get_service(ServiceType.VARIABLE_SERVICE, VariableServiceFactory())  # type: ignore
+    return get_service(ServiceType.VARIABLE_SERVICE, VariableServiceFactory())
+
+
+def get_prompt_service() -> "PromptService":
+    """
+    Retrieves the VariableService instance from the service manager.
+
+    Returns:
+        The VariableService instance.
+
+    """
+    from langflow.services.prompt.factory import PromptServiceFactory
+
+    return get_service(ServiceType.PROMPT_SERVICE, PromptServiceFactory())
+
+
+# type: ignore
 
 
 def get_plugins_service() -> "PluginService":

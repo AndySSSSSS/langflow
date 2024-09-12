@@ -26,6 +26,7 @@ import SettingsPage from "./pages/SettingsPage";
 import ApiKeysPage from "./pages/SettingsPage/pages/ApiKeysPage";
 import GeneralPage from "./pages/SettingsPage/pages/GeneralPage";
 import GlobalVariablesPage from "./pages/SettingsPage/pages/GlobalVariablesPage";
+import PromptPage from "./pages/SettingsPage/pages/PromptPage";
 import MessagesPage from "./pages/SettingsPage/pages/messagesPage";
 import ShortcutsPage from "./pages/SettingsPage/pages/ShortcutsPage";
 import StorePage from "./pages/StorePage";
@@ -113,6 +114,10 @@ const router = createBrowserRouter(
                   <Route
                     path="global-variables"
                     element={<GlobalVariablesPage />}
+                  />
+                  <Route
+                  path="prompt"
+                  element={<PromptPage />}
                   />
                   <Route path="api-keys" element={<ApiKeysPage />} />
                   <Route
