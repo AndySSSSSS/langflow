@@ -1,12 +1,12 @@
 import { usePostValidatePrompt } from "@/controllers/API/queries/nodes/use-post-validate-prompt";
 import React, { useEffect, useRef, useState } from "react";
 import IconComponent from "../../components/genericIconComponent";
-import Dropdown from "../../components/dropdownComponent";
 import SanitizedHTMLWrapper from "../../components/sanitizedHTMLWrapper";
 import ShadTooltip from "../../components/shadTooltipComponent";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
+
 import {
   BUG_ALERT,
   PROMPT_ERROR_ALERT,
@@ -20,8 +20,6 @@ import {
   PROMPT_DIALOG_SUBTITLE,
   regexHighlight,
 } from "../../constants/constants";
-import {WUDAO_PROMPT_SAMPLES} from "../../constants/wudao_constants_prompt";
-import InputComponent from "@/components/inputComponent";
 import useAlertStore from "../../stores/alertStore";
 import { PromptModalType } from "../../types/components";
 import { handleKeyDown } from "../../utils/reactflowUtils";
@@ -50,6 +48,10 @@ export default function PromptModal({
   const divRef = useRef(null);
   const divRefPrompt = useRef(null);
   const { mutate: postValidatePrompt } = usePostValidatePrompt();
+  const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 });
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   function checkVariables(valueToCheck: string): void {
     const regex = /\{([^{}]+)\}/g;
@@ -175,10 +177,6 @@ export default function PromptModal({
     );
   }
 
-  function set_sample_prompt(prompt_id: string):void {
-    setInputValue(WUDAO_PROMPT_SAMPLES[prompt_id])
-  }
-
   const handlePreviewClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isEdit && !readonly) {
       const clickX = e.clientX;
@@ -235,18 +233,6 @@ export default function PromptModal({
         </div>
       </BaseModal.Header>
       <BaseModal.Content overflowHidden>
-        <div className="pb-2">
-          <InputComponent
-              setSelectedOption={(e) => {
-                set_sample_prompt(e);
-              }}
-              password={false}
-              options={WUDAO_PROMPT_SAMPLES["keys"]}
-              placeholder="Prompt 模板"
-              id={"type-prompt-sample"}
-              autoFocus={false}
-          ></InputComponent>
-        </div>
         <div className={classNames("flex h-full w-full rounded-lg border")}>
           {isEdit && !readonly ? (
             <Textarea
