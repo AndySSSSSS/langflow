@@ -28,6 +28,8 @@ import { handleKeyDown } from "../../utils/reactflowUtils";
 import { classNames } from "../../utils/utils";
 import BaseModal from "../baseModal";
 import varHighlightHTML from "./utils/var-highlight-html";
+import {usePromptStore} from "@/stores/promptStore";
+import {useGetPromptQuery} from "@/controllers/API/queries/prompt";
 
 export default function PromptModal({
   field_name = "",
@@ -44,12 +46,17 @@ export default function PromptModal({
   const [inputValue, setInputValue] = useState(value);
   const [isEdit, setIsEdit] = useState(true);
   const [wordsHighlight, setWordsHighlight] = useState<Set<string>>(new Set());
+  const [wudaoPromptSamples, setWudaoPromptSamples] = useState<object>({});
+  const [wudaoPromptSampleKeys, setWudaoPromptSampleKeys] = useState<string[]>([]);
   const setSuccessData = useAlertStore((state) => state.setSuccessData);
   const setErrorData = useAlertStore((state) => state.setErrorData);
   const setNoticeData = useAlertStore((state) => state.setNoticeData);
+  const promptList = usePromptStore((state) => state.promptList);
   const divRef = useRef(null);
   const divRefPrompt = useRef(null);
   const { mutate: postValidatePrompt } = usePostValidatePrompt();
+
+  useGetPromptQuery({});
 
   function checkVariables(valueToCheck: string): void {
     const regex = /\{([^{}]+)\}/g;
@@ -112,6 +119,13 @@ export default function PromptModal({
   useEffect(() => {
     if (typeof value === "string") setInputValue(value);
   }, [value, modalOpen]);
+
+  useEffect(() => {
+    setWudaoPromptSampleKeys(promptList.map(v => v.name));
+    const samples = {};
+    promptList.forEach(v => samples[v.name] = v);
+    setWudaoPromptSamples(samples)
+  }, [promptList]);
 
   function getClassByNumberLength(): string {
     let sumOfCaracteres: number = 0;
@@ -176,7 +190,7 @@ export default function PromptModal({
   }
 
   function set_sample_prompt(prompt_id: string):void {
-    setInputValue(WUDAO_PROMPT_SAMPLES[prompt_id])
+    setInputValue(wudaoPromptSamples[prompt_id].content);
   }
 
   return (
@@ -209,7 +223,7 @@ export default function PromptModal({
                 set_sample_prompt(e);
               }}
               password={false}
-              options={WUDAO_PROMPT_SAMPLES["keys"]}
+              options={wudaoPromptSampleKeys}
               placeholder="Prompt 模板"
               id={"type-prompt-sample"}
               autoFocus={false}

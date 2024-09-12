@@ -44,6 +44,16 @@ export default function SettingsPage(): JSX.Element {
       ),
     },
     {
+      title: "Prompt",
+      href: "/settings/prompt",
+      icon: (
+        <ForwardedIconComponent
+          name="TerminalSquare"
+          className="w-4 flex-shrink-0 justify-start stroke-[1.5]"
+        />
+      ),
+    },
+    {
       title: "Langflow API",
       href: "/settings/api-keys",
       icon: (
