@@ -254,34 +254,34 @@ export default function Header(): JSX.Element {
                   </>
                 )}
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>Help</DropdownMenuLabel>
-                <DropdownMenuItem
-                  className="cursor-pointer gap-2"
-                  onClick={() =>
-                    window.open(
-                      DOCS_LINK || "https://docs.langflow.org/",
-                      "_blank",
-                    )
-                  }
-                >
-                  <ForwardedIconComponent name="FileText" className="w-4" />
-                  Docs
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer gap-2"
-                  onClick={() =>
-                    window.open(
-                      "https://github.com/langflow-ai/langflow/discussions",
-                      "_blank",
-                    )
-                  }
-                >
-                  <ForwardedIconComponent
-                    name="MessagesSquare"
-                    className="w-4"
-                  />
-                  Discussions
-                </DropdownMenuItem>
+                {/*<DropdownMenuLabel>Help</DropdownMenuLabel>*/}
+                {/*<DropdownMenuItem*/}
+                {/*  className="cursor-pointer gap-2"*/}
+                {/*  onClick={() =>*/}
+                {/*    window.open(*/}
+                {/*      DOCS_LINK || "https://docs.langflow.org/",*/}
+                {/*      "_blank",*/}
+                {/*    )*/}
+                {/*  }*/}
+                {/*>*/}
+                {/*  <ForwardedIconComponent name="FileText" className="w-4" />*/}
+                {/*  Docs*/}
+                {/*</DropdownMenuItem>*/}
+                {/*<DropdownMenuItem*/}
+                {/*  className="cursor-pointer gap-2"*/}
+                {/*  onClick={() =>*/}
+                {/*    window.open(*/}
+                {/*      "https://github.com/langflow-ai/langflow/discussions",*/}
+                {/*      "_blank",*/}
+                {/*    )*/}
+                {/*  }*/}
+                {/*>*/}
+                {/*  <ForwardedIconComponent*/}
+                {/*    name="MessagesSquare"*/}
+                {/*    className="w-4"*/}
+                {/*  />*/}
+                {/*  Discussions*/}
+                {/*</DropdownMenuItem>*/}
                 {!autoLogin && (
                   <>
                     <DropdownMenuSeparator />
