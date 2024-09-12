@@ -182,14 +182,14 @@ export default function SignUp(): JSX.Element {
                   handleSignup();
                 }}
               >
-                Sign up
+                注 册
               </Button>
             </Form.Submit>
           </div>
           <div className="w-full">
             <CustomLink to="/login">
               <Button className="w-full" variant="outline">
-                Already have an account?&nbsp;<b>Sign in</b>
+                已有账号？&nbsp;<b>登 录</b>
               </Button>
             </CustomLink>
           </div>

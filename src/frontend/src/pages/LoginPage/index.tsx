@@ -65,9 +65,9 @@ export default function LoginPage(): JSX.Element {
     >
       <div className="flex h-full w-full flex-col items-center justify-center bg-muted">
         <div className="flex w-72 flex-col items-center justify-center gap-2">
-          <span className="mb-4 text-5xl">⛓️</span>
+          <span className="mb-4 text-5xl">🤖</span>
           <span className="mb-6 text-2xl font-semibold text-primary">
-            Sign in to Langflow
+            大模型智能体开发平台
           </span>
           <div className="mb-3 w-full">
             <Form.Field name="username">
@@ -119,14 +119,14 @@ export default function LoginPage(): JSX.Element {
           <div className="w-full">
             <Form.Submit asChild>
               <Button className="mr-3 mt-6 w-full" type="submit">
-                Sign in
+                登 录
               </Button>
             </Form.Submit>
           </div>
           <div className="w-full">
             <CustomLink to="/signup">
               <Button className="w-full" variant="outline" type="button">
-                Don't have an account?&nbsp;<b>Sign Up</b>
+                没有账号？&nbsp;<b>注 册</b>
               </Button>
             </CustomLink>
           </div>
