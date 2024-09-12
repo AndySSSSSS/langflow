@@ -6,7 +6,9 @@ import ShadTooltip from "../../components/shadTooltipComponent";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
-
+import {usePromptStore} from "@/stores/promptStore";
+import {useGetPromptQuery} from "@/controllers/API/queries/prompt";
+import InputComponent from "@/components/inputComponent";
 import {
   BUG_ALERT,
   PROMPT_ERROR_ALERT,
@@ -42,6 +44,9 @@ export default function PromptModal({
   const [inputValue, setInputValue] = useState(value);
   const [isEdit, setIsEdit] = useState(true);
   const [wordsHighlight, setWordsHighlight] = useState<Set<string>>(new Set());
+  const [wudaoPromptSamples, setWudaoPromptSamples] = useState<object>({});
+  const [wudaoPromptSampleKeys, setWudaoPromptSampleKeys] = useState<string[]>([]);
+  const promptList = usePromptStore((state) => state.promptList);
   const setSuccessData = useAlertStore((state) => state.setSuccessData);
   const setErrorData = useAlertStore((state) => state.setErrorData);
   const setNoticeData = useAlertStore((state) => state.setNoticeData);
@@ -52,6 +57,8 @@ export default function PromptModal({
   const [scrollPosition, setScrollPosition] = useState(0);
   const previewRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useGetPromptQuery({});
 
   function checkVariables(valueToCheck: string): void {
     const regex = /\{([^{}]+)\}/g;
@@ -114,6 +121,13 @@ export default function PromptModal({
   useEffect(() => {
     if (typeof value === "string") setInputValue(value);
   }, [value, modalOpen]);
+
+  useEffect(() => {
+    setWudaoPromptSampleKeys(promptList.map(v => v.name));
+    const samples = {};
+    promptList.forEach(v => samples[v.name] = v);
+    setWudaoPromptSamples(samples)
+  }, [promptList]);
 
   function getClassByNumberLength(): string {
     let sumOfCaracteres: number = 0;
@@ -208,6 +222,10 @@ export default function PromptModal({
     }
   }, [isEdit, clickPosition, scrollPosition]);
 
+  function set_sample_prompt(prompt_id: string):void {
+    setInputValue(wudaoPromptSamples[prompt_id].content);
+  }
+
   return (
     <BaseModal
       onChangeOpenModal={(open) => {}}
@@ -233,36 +251,48 @@ export default function PromptModal({
         </div>
       </BaseModal.Header>
       <BaseModal.Content overflowHidden>
+        <div className="pb-2">
+          <InputComponent
+              setSelectedOption={(e) => {
+                set_sample_prompt(e);
+              }}
+              password={false}
+              options={wudaoPromptSampleKeys}
+              placeholder="Prompt 模板"
+              id={"type-prompt-sample"}
+              autoFocus={false}
+          ></InputComponent>
+        </div>
         <div className={classNames("flex h-full w-full rounded-lg border")}>
           {isEdit && !readonly ? (
-            <Textarea
-              id={"modal-" + id}
-              data-testid={"modal-" + id}
-              ref={textareaRef}
-              className="form-input h-full w-full resize-none rounded-lg border-0 custom-scroll focus-visible:ring-1"
-              value={inputValue}
-              onBlur={() => {
-                setScrollPosition(textareaRef.current?.scrollTop || 0);
-                setIsEdit(false);
-              }}
-              autoFocus
-              onChange={(event) => {
-                setInputValue(event.target.value);
-                checkVariables(event.target.value);
-              }}
-              placeholder={EDIT_TEXT_PLACEHOLDER}
-              onKeyDown={(e) => {
-                handleKeyDown(e, inputValue, "");
-              }}
-            />
+              <Textarea
+                  id={"modal-" + id}
+                  data-testid={"modal-" + id}
+                  ref={textareaRef}
+                  className="form-input h-full w-full resize-none rounded-lg border-0 custom-scroll focus-visible:ring-1"
+                  value={inputValue}
+                  onBlur={() => {
+                    setScrollPosition(textareaRef.current?.scrollTop || 0);
+                    setIsEdit(false);
+                  }}
+                  autoFocus
+                  onChange={(event) => {
+                    setInputValue(event.target.value);
+                    checkVariables(event.target.value);
+                  }}
+                  placeholder={EDIT_TEXT_PLACEHOLDER}
+                  onKeyDown={(e) => {
+                    handleKeyDown(e, inputValue, "");
+                  }}
+              />
           ) : (
-            <SanitizedHTMLWrapper
-              ref={previewRef}
-              className={getClassByNumberLength() + " bg-muted"}
-              onClick={handlePreviewClick}
-              content={coloredContent}
-              suppressWarning={true}
-            />
+              <SanitizedHTMLWrapper
+                  ref={previewRef}
+                  className={getClassByNumberLength() + " bg-muted"}
+                  onClick={handlePreviewClick}
+                  content={coloredContent}
+                  suppressWarning={true}
+              />
           )}
         </div>
       </BaseModal.Content>
@@ -271,11 +301,11 @@ export default function PromptModal({
           <div className="mb-auto flex-1">
             <div className="mr-2">
               <div
-                ref={divRef}
-                className="max-h-20 overflow-y-auto custom-scroll"
+                  ref={divRef}
+                  className="max-h-20 overflow-y-auto custom-scroll"
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <IconComponent
+                <IconComponent
                     name="Braces"
                     className="flex h-4 w-4 text-primary"
                   />
