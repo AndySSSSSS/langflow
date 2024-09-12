@@ -1,5 +1,5 @@
 from langflow.custom import Component
-from langflow.io import StrInput, Output
+from langflow.io import StrInput, MessageTextInput, Output
 from langflow.utils.wudao.tool_playwright import save_page_pdf
 
 
@@ -10,7 +10,7 @@ class WudaoSpiderComponent(Component):
     name = "WudaoSpider"
 
     inputs = [
-        StrInput(
+        MessageTextInput(
             name="url",
             display_name="URL",
             required=True,

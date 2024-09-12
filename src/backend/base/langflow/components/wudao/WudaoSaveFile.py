@@ -48,8 +48,8 @@ class WudaoSaveFileComponent(Component):
     ]
 
     def save_data(self) -> str:
-        print(self.mongo)
-        print(self.minio)
+        print(type(self.mongo))
+        print(type(self.minio))
 
         self.status = self.article['title']
         return "chunks"
