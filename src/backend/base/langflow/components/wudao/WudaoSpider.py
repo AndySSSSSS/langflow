@@ -50,7 +50,6 @@ class WudaoSpiderComponent(Component):
         minio = self.minio if isinstance(self.minio, Minio) else self.minio
         # 获取文章
         article = await save_page_pdf(self.url, minio, self.bucket_name)
-        article['type'] = self.type
         article["bucket_name"] = self.bucket_name
         self.status = article['title']
         return article

@@ -1,5 +1,6 @@
 from datetime import timedelta
 from io import BytesIO
+from urllib.parse import urlparse, parse_qs
 
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
@@ -16,11 +17,17 @@ async def save_page_pdf(page_url: str, minio_client, bucket_name):
         await page.goto(page_url)
         await page.wait_for_selector('div.content')
 
+        # 获取news的父级类目信息
+        article_column = await get_article_column(await page.content())
+
         # 使用 JavaScript 选择并调整指定的 div
         await page.evaluate(EXP_GONG_XIAO_NEWS)
 
         html = await page.content()
         article = await fetch_webpage_content(html)
+
+        # 追加type信息
+        article.update(article_column)
 
         # 生成 PDF
         pdf_bytes = await page.pdf(
@@ -42,8 +49,49 @@ async def save_page_pdf(page_url: str, minio_client, bucket_name):
         presigned_url = minio_client.presigned_get_object(bucket_name, filename, expires=timedelta(days=7))
         article['presigned_url'] = presigned_url
 
+        print(article)
+
         await browser.close()
         return article
+
+
+def get_full_url(url: str) -> str:
+    if 'www.chinacoop.gov.cn' in url:
+        return url
+    else:
+        return f'https://www.chinacoop.gov.cn/{url}'
+
+
+def get_url_param_id(url: str) -> str:
+    # 解析 URL
+    parsed_url = urlparse(url)
+    # 获取查询参数
+    query_params = parse_qs(parsed_url.query)
+    # 获取 id 参数的值
+    id_value = query_params.get('id')
+    if id_value is None:
+        return ""
+    else:
+        return id_value[0]
+
+
+async def get_article_column(html: str) -> dict:
+    article_column = {
+        'column_id':'',
+        'column_link':'',
+        'column_type':'',
+    }
+    soup = BeautifulSoup(html, 'html.parser')
+    div_location = soup.find('div', class_='locationBox')
+    links = div_location.find_all('a')
+
+    for link in links:
+        if link.has_attr('href') and 'column.html' in link['href']:
+            article_column['column_type'] = link.get_text()
+            article_column['column_link'] = get_full_url(link['href'])
+            article_column['column_id'] = get_url_param_id(link['href'])
+    return article_column
+
 
 
 async def fetch_webpage_content(html: str):

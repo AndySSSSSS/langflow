@@ -39,10 +39,13 @@ class WudaoSaveRecordComponent(Component):
     def save_data(self) -> Message or None:
         collection = self.collection if isinstance(self.collection, Collection) else self.collection
 
+        if self.article["title"] is None or self.article["title"] == '':
+            return None
+
         # 判断是否有该文件
         query = {
             "title": self.article["title"],
-            "type": self.article["type"],
+            "column.id": self.article["column_id"],
             "time": self.article["time"],
         }
         if collection.find_one(query):
@@ -54,7 +57,11 @@ class WudaoSaveRecordComponent(Component):
         else:
             insert_data = {
                 "title": self.article["title"],
-                "type": self.article["type"],
+                "column": {
+                    "id": self.article["column_id"],
+                    "type": self.article["column_type"],
+                    "link": self.article["column_link"],
+                },
                 "time": self.article["time"],
                 "content": self.article["content"],
                 "file": {
