@@ -38,36 +38,36 @@ class WudaoSaveRecordComponent(Component):
 
     def save_data(self) -> Message or None:
         collection = self.collection if isinstance(self.collection, Collection) else self.collection
+        article = self.article if isinstance(self.article, dict) else self.article
 
-        if self.article["title"] is None or self.article["title"] == '':
-            return None
+        if "title" not in article or article["title"] == '':
+            return Message(text='无效地址')
 
         # 判断是否有该文件
         query = {
-            "title": self.article["title"],
-            "column.id": self.article["column_id"],
-            "time": self.article["time"],
+            "aid": article["aid"],
         }
         if collection.find_one(query):
             update_data = {
                 "update_time": date.today().strftime("%Y-%m-%d"),
-                "file.url": self.article["presigned_url"],
+                "file.url": article["presigned_url"],
             }
             collection.update_one(query, {"$set": update_data})
         else:
             insert_data = {
-                "title": self.article["title"],
+                "title": article["title"],
+                "aid": article["aid"],
                 "column": {
-                    "id": self.article["column_id"],
-                    "type": self.article["column_type"],
-                    "link": self.article["column_link"],
+                    "id": article["column_id"],
+                    "type": article["column_type"],
+                    "link": article["column_link"],
                 },
-                "time": self.article["time"],
-                "content": self.article["content"],
+                "time": article["time"],
+                "content": article["content"],
                 "file": {
-                    "filename": self.article["title"] + ".pdf",
-                    "bucket_name": self.article["bucket_name"],
-                    "url": self.article["presigned_url"],
+                    "filename": article["title"] + ".pdf",
+                    "bucket_name": article["bucket_name"],
+                    "url": article["presigned_url"],
                     "expire_day": (date.today() + timedelta(days=7)).strftime("%Y-%m-%d")
                 },
                 "create_time": date.today().strftime("%Y-%m-%d"),
@@ -75,5 +75,5 @@ class WudaoSaveRecordComponent(Component):
             }
             collection.insert_one(insert_data)
 
-        self.status = self.article["presigned_url"]
-        return Message(text=self.article["presigned_url"])
+        self.status = article["presigned_url"]
+        return Message(text=article["presigned_url"])

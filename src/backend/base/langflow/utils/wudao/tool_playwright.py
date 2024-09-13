@@ -3,14 +3,16 @@ from io import BytesIO
 from urllib.parse import urlparse, parse_qs
 
 from bs4 import BeautifulSoup
-from playwright.async_api import async_playwright
-
 from langflow.utils.wudao.const_html_page import EXP_GONG_XIAO_NEWS
 from langflow.utils.wudao.tool_date import normalize_date
+from playwright.async_api import async_playwright
 
 
-async def save_page_pdf(page_url: str, minio_client, bucket_name):
+async def save_page_pdf(page_url: str, minio_client, bucket_name) -> dict:
     async with async_playwright() as p:
+        if page_url is None or 'news.html' not in page_url:
+            return {'title': ''}
+
         browser = await p.chromium.launch()
         page = await browser.new_page()
 
@@ -48,8 +50,9 @@ async def save_page_pdf(page_url: str, minio_client, bucket_name):
 
         presigned_url = minio_client.presigned_get_object(bucket_name, filename, expires=timedelta(days=7))
         article['presigned_url'] = presigned_url
+        article['aid'] = get_url_param(page_url, 'aid')
 
-        print(article)
+        # print(article)
 
         await browser.close()
         return article
@@ -62,13 +65,13 @@ def get_full_url(url: str) -> str:
         return f'https://www.chinacoop.gov.cn/{url}'
 
 
-def get_url_param_id(url: str) -> str:
+def get_url_param(url: str, param: str) -> str:
     # 解析 URL
     parsed_url = urlparse(url)
     # 获取查询参数
     query_params = parse_qs(parsed_url.query)
     # 获取 id 参数的值
-    id_value = query_params.get('id')
+    id_value = query_params.get(param)
     if id_value is None:
         return ""
     else:
@@ -77,9 +80,9 @@ def get_url_param_id(url: str) -> str:
 
 async def get_article_column(html: str) -> dict:
     article_column = {
-        'column_id':'',
-        'column_link':'',
-        'column_type':'',
+        'column_id': '',
+        'column_link': '',
+        'column_type': '',
     }
     soup = BeautifulSoup(html, 'html.parser')
     div_location = soup.find('div', class_='locationBox')
@@ -89,9 +92,8 @@ async def get_article_column(html: str) -> dict:
         if link.has_attr('href') and 'column.html' in link['href']:
             article_column['column_type'] = link.get_text()
             article_column['column_link'] = get_full_url(link['href'])
-            article_column['column_id'] = get_url_param_id(link['href'])
+            article_column['column_id'] = get_url_param(link['href'], 'id')
     return article_column
-
 
 
 async def fetch_webpage_content(html: str):
