@@ -9,11 +9,11 @@ from playwright.async_api import async_playwright
 
 
 async def save_page_pdf(page_url: str, minio_client, bucket_name) -> dict:
-    print(f"Saving page [{page_url}] to MinIO bucket: {bucket_name}")
+    print(f"Saving page [{page_url}] to MinIO bucket: [{bucket_name}]")
     async with async_playwright() as p:
         try:
             if page_url is None or 'news.html' not in page_url:
-                return {'title': ''}
+                return {'error': '网址无效'}
 
             browser = await p.chromium.launch()
             page = await browser.new_page()
@@ -29,6 +29,10 @@ async def save_page_pdf(page_url: str, minio_client, bucket_name) -> dict:
 
             html = await page.content()
             article = await fetch_webpage_content(html)
+            # print(article)
+
+            if len(article['title']) == 0:
+                return {'error': '网址无效'}
 
             # # 追加type信息
             # article.update(article_column)
@@ -60,7 +64,7 @@ async def save_page_pdf(page_url: str, minio_client, bucket_name) -> dict:
             return article
         except Exception as e:
             print(f'save_page_pdf error: {e}')
-            return {'title': ''}
+            return {'error': '获取页面失败'}
 
 def get_full_url(url: str) -> str:
     if url.startswith("./"):
@@ -111,7 +115,7 @@ async def fetch_webpage_content(html: str):
         if t:
             title = t.get_text()
     if len(title) == 0:
-        title = div_title.get_text()
+        title = div_title.get_text(strip=True)
 
     # 时间
     time = ""

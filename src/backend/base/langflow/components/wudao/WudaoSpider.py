@@ -29,6 +29,13 @@ class WudaoSpiderComponent(Component):
             input_types=["Minio"],
             info="The MinIO",
         ),
+        HandleInput(
+            name="mongo",
+            display_name="MongoClient",
+            required=True,
+            input_types=["MongoClient"],
+            info="The MongoClient",
+        ),
         MessageTextInput(
             name="aid",
             display_name="Aid fo news to crawl",
@@ -54,18 +61,24 @@ class WudaoSpiderComponent(Component):
 
     async def save_page_data(self) -> dict:
         minio = self.minio if isinstance(self.minio, Minio) else self.minio
+        mongo = self.mongo if isinstance(self.mongo, MongoClient) else self.mongo
         # 爬取新闻地址
-        aid = self.data.aid if isinstance(self.data, Data) else self.aid
+        aid = self.data.aid if isinstance(self.data, Data) and self.data.__contains__('aid') else self.aid
         # minIo bucket name
-        bucket_name = self.data.bucket_name if isinstance(self.data, Data) else self.bucket_name
+        bucket_name = self.data.bucket_name if isinstance(self.data, Data) and self.data.__contains__('bucket_name') else self.bucket_name
         # 文章类型，column name
-        type = self.data.type if isinstance(self.data, Data) else self.type
+        type = self.data.type if isinstance(self.data, Data) and self.data.__contains__('type') else self.type
+
+        # check 文章是否已经下载过
+        collection = mongo['files']
+        article_mongo = collection.find_one({'aid': aid})
+        if article_mongo is not None:
+            return {'error' : '该网页已下载。'}
 
         url = f'https://www.chinacoop.gov.cn/news.html?aid={aid}'
-
         # 获取文章
         article = await save_page_pdf(url, minio, bucket_name)
         article["bucket_name"] = bucket_name
         article["type"] = type
-        self.status = article['title']
+        self.status = url
         return article

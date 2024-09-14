@@ -1,6 +1,6 @@
 from typing import Callable, Dict, Text, TypeAlias, TypeVar, Union
 
-from pymongo.collection import Collection
+from pymongo import MongoClient
 from minio import Minio
 
 from langchain.agents.agent import AgentExecutor
@@ -74,6 +74,6 @@ CUSTOM_COMPONENT_SUPPORTED_TYPES = {
     "Callable": Callable,
     "LanguageModel": LanguageModel,
     "Retriever": Retriever,
-    "Collection": Collection,
+    "MongoClient": MongoClient,
     "Minio": Minio,
 }

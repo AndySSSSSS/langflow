@@ -1,5 +1,4 @@
 from pymongo import MongoClient
-from pymongo.collection import Collection
 
 from langflow.custom import Component
 from langflow.io import StrInput, IntInput, Output
@@ -32,13 +31,6 @@ class WudaoMongoDBComponent(Component):
             info="数据库名",
         ),
         StrInput(
-            name="collection_name",
-            display_name="MongoDB Collection",
-            required=True,
-            value="files",
-            info="文档名",
-        ),
-        StrInput(
             name="username",
             display_name="MongoDB Username",
             required=True,
@@ -56,7 +48,7 @@ class WudaoMongoDBComponent(Component):
         Output(display_name="MongoDB", name="mongodb", method="get_mongodb"),
     ]
 
-    def get_mongodb(self) -> Collection:
+    def get_mongodb(self) -> MongoClient:
         # 构建 MongoDB 连接字符串
         uri = f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}"
 
@@ -65,8 +57,7 @@ class WudaoMongoDBComponent(Component):
 
         # 选择数据库和集合
         db = client[self.database_name]
-        collection = db[self.collection_name]
 
         self.status = uri
 
-        return collection
+        return db

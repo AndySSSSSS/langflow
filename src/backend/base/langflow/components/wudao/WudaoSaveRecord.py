@@ -4,6 +4,7 @@ from langflow.custom import Component
 from langflow.inputs import HandleInput
 from langflow.io import Output
 from langflow.schema.message import Message
+from pymongo import MongoClient
 from pymongo.collection import Collection
 
 
@@ -22,13 +23,12 @@ class WudaoSaveRecordComponent(Component):
             info="The article to save",
         ),
         HandleInput(
-            name="collection",
-            display_name="MongoDB Collection",
+            name="mongo",
+            display_name="MongoClient",
             required=True,
-            input_types=["Collection"],
-            info="The MongoDB Collection",
+            input_types=["MongoClient"],
+            info="The MongoClient",
         ),
-
     ]
 
     outputs = [
@@ -36,12 +36,13 @@ class WudaoSaveRecordComponent(Component):
     ]
 
     def save_data(self) -> Message or None:
-        collection = self.collection if isinstance(self.collection, Collection) else self.collection
+        mongo = self.mongo if isinstance(self.mongo, MongoClient) else self.mongo
         article = self.article if isinstance(self.article, dict) else self.article
 
-        if "title" not in article or article["title"] == '':
-            return Message(text='无效地址')
+        if "error" in article:
+            return Message(text=article['error'])
 
+        collection = mongo["files"]
         # 判断是否有该文件
         query = {
             "aid": article["aid"],
