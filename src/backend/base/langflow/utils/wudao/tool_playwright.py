@@ -10,62 +10,65 @@ from playwright.async_api import async_playwright
 
 async def save_page_pdf(page_url: str, minio_client, bucket_name) -> dict:
     async with async_playwright() as p:
-        if page_url is None or 'news.html' not in page_url:
+        try:
+            if page_url is None or 'news.html' not in page_url:
+                return {'title': ''}
+
+            browser = await p.chromium.launch()
+            page = await browser.new_page()
+
+            await page.goto(page_url)
+            await page.wait_for_selector('div.content')
+
+            # 获取news的父级类目信息
+            # article_column = await get_article_column(await page.content())
+
+            # 使用 JavaScript 选择并调整指定的 div
+            await page.evaluate(EXP_GONG_XIAO_NEWS)
+
+            html = await page.content()
+            article = await fetch_webpage_content(html)
+
+            # # 追加type信息
+            # article.update(article_column)
+
+            # 生成 PDF
+            pdf_bytes = await page.pdf(
+                format='A5',
+                print_background=True,
+                margin=dict(top='72px', bottom='72px', left='72px', right='72px')
+            )
+
+            pdf_stream = BytesIO(pdf_bytes)
+            filename = article['title'] + '.pdf'
+            minio_client.put_object(
+                bucket_name,
+                filename,
+                pdf_stream,
+                length=len(pdf_bytes),
+                content_type='application/pdf'
+            )
+
+            presigned_url = minio_client.presigned_get_object(bucket_name, filename, expires=timedelta(days=7))
+            article['presigned_url'] = presigned_url
+            article['aid'] = get_url_param(page_url, 'aid')
+
+            # print(article)
+
+            await browser.close()
+            return article
+        except Exception as e:
+            print(f'save_page_pdf error: {e}')
             return {'title': ''}
 
-        browser = await p.chromium.launch()
-        page = await browser.new_page()
-
-        await page.goto(page_url)
-        await page.wait_for_selector('div.content')
-
-        # 获取news的父级类目信息
-        article_column = await get_article_column(await page.content())
-
-        # 使用 JavaScript 选择并调整指定的 div
-        await page.evaluate(EXP_GONG_XIAO_NEWS)
-
-        html = await page.content()
-        article = await fetch_webpage_content(html)
-
-        # 追加type信息
-        article.update(article_column)
-
-        # 生成 PDF
-        pdf_bytes = await page.pdf(
-            format='A5',
-            print_background=True,
-            margin=dict(top='72px', bottom='72px', left='72px', right='72px')
-        )
-
-        pdf_stream = BytesIO(pdf_bytes)
-        filename = article['title'] + '.pdf'
-        minio_client.put_object(
-            bucket_name,
-            filename,
-            pdf_stream,
-            length=len(pdf_bytes),
-            content_type='application/pdf'
-        )
-
-        presigned_url = minio_client.presigned_get_object(bucket_name, filename, expires=timedelta(days=7))
-        article['presigned_url'] = presigned_url
-        article['aid'] = get_url_param(page_url, 'aid')
-
-        # print(article)
-
-        await browser.close()
-        return article
-
-
 def get_full_url(url: str) -> str:
-    if 'www.chinacoop.gov.cn' in url:
-        return url
+    if url.startswith("./"):
+        return f'https://www.chinacoop.gov.cn/{url[2:]}'
     else:
-        return f'https://www.chinacoop.gov.cn/{url}'
+        return url
 
 
-def get_url_param(url: str, param: str) -> str:
+def get_url_param(url: str, param: str) -> str or None:
     # 解析 URL
     parsed_url = urlparse(url)
     # 获取查询参数
@@ -73,7 +76,7 @@ def get_url_param(url: str, param: str) -> str:
     # 获取 id 参数的值
     id_value = query_params.get(param)
     if id_value is None:
-        return ""
+        return None
     else:
         return id_value[0]
 

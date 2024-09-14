@@ -57,11 +57,7 @@ class WudaoSaveRecordComponent(Component):
             insert_data = {
                 "title": article["title"],
                 "aid": article["aid"],
-                "column": {
-                    "id": article["column_id"],
-                    "type": article["column_type"],
-                    "link": article["column_link"],
-                },
+                "type": article["type"],
                 "time": article["time"],
                 "content": article["content"],
                 "file": {

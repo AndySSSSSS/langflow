@@ -4,7 +4,8 @@ from io import BytesIO
 from minio import Minio
 
 from langflow.custom import Component
-from langflow.io import StrInput, MessageTextInput, HandleInput, Output
+from langflow.io import StrInput, MessageTextInput, HandleInput,DataInput, Output
+from langflow.schema import Data
 from langflow.utils.wudao.tool_playwright import save_page_pdf
 
 
@@ -15,11 +16,11 @@ class WudaoSpiderComponent(Component):
     name = "WudaoSpider"
 
     inputs = [
-        MessageTextInput(
-            name="url",
-            display_name="URL",
+        DataInput(
+            name="data",
+            display_name="Configuration",
             required=True,
-            info="The URL to scrape or crawl",
+            info="Configuration file",
         ),
         HandleInput(
             name="minio",
@@ -29,16 +30,21 @@ class WudaoSpiderComponent(Component):
             info="The MinIO",
         ),
         MessageTextInput(
+            name="url",
+            display_name="URL to crawl",
+            info="The URL to scrape or crawl",
+            advanced=True,
+        ),
+        MessageTextInput(
             name="bucket_name",
             display_name="Bucket of MinIO",
-            required=True,
+            advanced=True,
         ),
-        StrInput(
+        MessageTextInput(
             name="type",
-            display_name="File Type",
-            value='供销新闻',
-            required=True,
-            info="File type of the file you download.",
+            display_name="Column Type",
+            info="Column type of the article you download.",
+            advanced=True,
         ),
     ]
 
@@ -48,8 +54,16 @@ class WudaoSpiderComponent(Component):
 
     async def save_page_data(self) -> dict:
         minio = self.minio if isinstance(self.minio, Minio) else self.minio
+        # 爬取新闻地址
+        url = self.data.url if isinstance(self.data, Data) else self.url
+        # minIo bucket name
+        bucket_name = self.data.bucket_name if isinstance(self.data, Data) else self.bucket_name
+        # 文章类型，column name
+        type = self.data.type if isinstance(self.data, Data) else self.type
+
         # 获取文章
-        article = await save_page_pdf(self.url, minio, self.bucket_name)
-        article["bucket_name"] = self.bucket_name
+        article = await save_page_pdf(url, minio, bucket_name)
+        article["bucket_name"] = bucket_name
+        article["type"] = type
         self.status = article['title']
         return article
