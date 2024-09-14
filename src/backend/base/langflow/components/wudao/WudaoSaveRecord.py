@@ -1,11 +1,10 @@
 from datetime import timedelta, date
 
-from pymongo.collection import Collection
-
 from langflow.custom import Component
 from langflow.inputs import HandleInput
 from langflow.io import Output
 from langflow.schema.message import Message
+from pymongo.collection import Collection
 
 
 class WudaoSaveRecordComponent(Component):
@@ -71,5 +70,6 @@ class WudaoSaveRecordComponent(Component):
             }
             collection.insert_one(insert_data)
 
-        self.status = article["presigned_url"]
-        return Message(text=article["presigned_url"])
+        message = Message(text=article["title"], files=[article["presigned_url"]])
+        self.status = message
+        return message

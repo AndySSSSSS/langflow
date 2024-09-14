@@ -9,6 +9,7 @@ from playwright.async_api import async_playwright
 
 
 async def save_page_pdf(page_url: str, minio_client, bucket_name) -> dict:
+    print(f"Saving page [{page_url}] to MinIO bucket: {bucket_name}")
     async with async_playwright() as p:
         try:
             if page_url is None or 'news.html' not in page_url:

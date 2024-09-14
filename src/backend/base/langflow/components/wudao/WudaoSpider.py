@@ -18,9 +18,9 @@ class WudaoSpiderComponent(Component):
     inputs = [
         DataInput(
             name="data",
-            display_name="Configuration",
+            display_name="Parameters",
             required=True,
-            info="Configuration file",
+            info="aid, bucket_name, bucket_name",
         ),
         HandleInput(
             name="minio",
@@ -30,9 +30,9 @@ class WudaoSpiderComponent(Component):
             info="The MinIO",
         ),
         MessageTextInput(
-            name="url",
-            display_name="URL to crawl",
-            info="The URL to scrape or crawl",
+            name="aid",
+            display_name="Aid fo news to crawl",
+            info="The aid to scrape or crawl",
             advanced=True,
         ),
         MessageTextInput(
@@ -55,11 +55,13 @@ class WudaoSpiderComponent(Component):
     async def save_page_data(self) -> dict:
         minio = self.minio if isinstance(self.minio, Minio) else self.minio
         # 爬取新闻地址
-        url = self.data.url if isinstance(self.data, Data) else self.url
+        aid = self.data.aid if isinstance(self.data, Data) else self.aid
         # minIo bucket name
         bucket_name = self.data.bucket_name if isinstance(self.data, Data) else self.bucket_name
         # 文章类型，column name
         type = self.data.type if isinstance(self.data, Data) else self.type
+
+        url = f'https://www.chinacoop.gov.cn/news.html?aid={aid}'
 
         # 获取文章
         article = await save_page_pdf(url, minio, bucket_name)
