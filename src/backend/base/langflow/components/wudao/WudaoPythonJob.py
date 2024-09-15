@@ -1,6 +1,8 @@
 import asyncio
 import subprocess
+import tempfile
 from typing import List
+import os
 
 from langflow.custom import Component
 from langflow.io import CodeInput, Output
@@ -30,16 +32,22 @@ class WudaoPythonJobComponent(Component):
     ]
 
     # 使用异步方式来执行命令并实时打印输出
-    async def execute_and_print(self, command):
-        process = await asyncio.create_subprocess_shell(
-            command,
+    async def execute_and_print(self, function_code):
+        # 创建一个临时文件来保存代码
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as temp_file:
+            temp_file.write(function_code.encode())
+            temp_file.flush()
+            temp_file_path = temp_file.name
+
+        # 使用 python 执行临时文件
+        process = await asyncio.create_subprocess_exec(
+            'python', temp_file_path,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            env={**subprocess.os.environ, "PYTHONUNBUFFERED": "1"}  # 禁用缓冲
+            env={**os.environ, "PYTHONUNBUFFERED": "1"}  # 禁用缓冲
         )
 
         lines = []
-        # 实时读取输出
         while True:
             line = await process.stdout.readline()
             if line == b'':
@@ -47,9 +55,13 @@ class WudaoPythonJobComponent(Component):
             print(line.decode().rstrip())
             lines.append(line.decode().rstrip())
 
-        # 等待进程结束
         await process.wait()
-        return lines
+        return_code = process.returncode
+
+        # 清理临时文件
+        os.remove(temp_file_path)
+
+        return lines if return_code == 0 else return_code
 
     async def execute_function(self) -> List[dotdict | str] | dotdict | str:
         function_code = self.function_code
@@ -58,11 +70,8 @@ class WudaoPythonJobComponent(Component):
             return "No function code provided."
 
         try:
-            # 使用三重引号来保证多行代码的正确传递
-            command = f'python -c """{function_code}"""'
-
             # 使用 await 来调用异步的执行函数
-            lines = await self.execute_and_print(command)
+            lines = await self.execute_and_print(function_code)
 
             return lines
         except Exception as e:

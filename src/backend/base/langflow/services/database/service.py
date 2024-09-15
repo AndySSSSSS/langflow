@@ -256,7 +256,7 @@ class DatabaseService(Service):
         results = []
         inspector = inspect(self.engine)
         table_name = model.__tablename__
-        expected_columns = list(model.__fields__.keys())
+        expected_columns = list(model.model_fields.keys())
         available_columns = []
         try:
             available_columns = [col["name"] for col in inspector.get_columns(table_name)]
