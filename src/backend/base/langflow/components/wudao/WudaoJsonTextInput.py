@@ -1,8 +1,8 @@
+import json
+
 from langflow.base.io.text import TextComponent
 from langflow.io import MultilineInput, Output
 from langflow.schema import Data
-import json
-
 
 
 class WudaoJsonTextInputComponent(TextComponent):
@@ -23,9 +23,7 @@ class WudaoJsonTextInputComponent(TextComponent):
     ]
 
     def text_response(self) -> Data:
-        input_value = self.input_value if isinstance(self.input_value, str) else message.value
-
-        data = json.loads(input_value)
+        data = json.loads(self.input_value)
         return_data = Data(data=data)
         self.status = return_data
         return return_data

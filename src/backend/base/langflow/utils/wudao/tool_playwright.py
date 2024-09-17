@@ -8,6 +8,19 @@ from langflow.utils.wudao.tool_date import normalize_date
 from playwright.async_api import async_playwright
 
 
+async def loop_for_page(page, count):
+    await page.reload()
+    # await page.wait_for_selector('div.content')
+    await page.evaluate(EXP_GONG_XIAO_NEWS)
+    html = await page.content()
+    article = await fetch_webpage_content(html)
+    if count > 0 and len(article['title']) == 0:
+        print(f'5s后尝试重新获取页面，剩余次数：{str(count - 1)}')
+        await page.wait_for_timeout(5000)
+        article = await loop_for_page(page, count - 1)
+    return article
+
+
 async def save_page_pdf(page_url: str, minio_client, bucket_name) -> dict:
     print(f"Saving page [{page_url}] to MinIO bucket: [{bucket_name}]")
     async with async_playwright() as p:
@@ -17,22 +30,29 @@ async def save_page_pdf(page_url: str, minio_client, bucket_name) -> dict:
 
             browser = await p.chromium.launch()
             page = await browser.new_page()
-
             await page.goto(page_url)
-            await page.wait_for_selector('div.content')
-
-            # 获取news的父级类目信息
-            # article_column = await get_article_column(await page.content())
-
-            # 使用 JavaScript 选择并调整指定的 div
-            await page.evaluate(EXP_GONG_XIAO_NEWS)
-
-            html = await page.content()
-            article = await fetch_webpage_content(html)
-            # print(article)
+            await page.wait_for_timeout(3000)
+            # await page.wait_for_selector('div.content')
+            #
+            # # 使用 JavaScript 选择并调整指定的 div
+            # await page.evaluate(EXP_GONG_XIAO_NEWS)
+            #
+            # html = await page.content()
+            # article = await fetch_webpage_content(html)
+            # # print(article)
+            #
+            # if len(article['title']) == 0:
+            #     print("重新获取页面中。。。")
+            #     await page.wait_for_timeout(5000)
+            #     await page.reload()
+            #     await page.wait_for_selector('div.content')
+            #     await page.evaluate(EXP_GONG_XIAO_NEWS)
+            #     html = await page.content()
+            #     article = await fetch_webpage_content(html)
+            article = await loop_for_page(page, 5)
 
             if len(article['title']) == 0:
-                return {'error': '网址无效'}
+                return {'error': '页面获取失败'}
 
             # # 追加type信息
             # article.update(article_column)

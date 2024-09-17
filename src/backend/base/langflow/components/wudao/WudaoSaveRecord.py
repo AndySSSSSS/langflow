@@ -1,11 +1,11 @@
 from datetime import timedelta, date
 
+from pymongo import MongoClient
+
 from langflow.custom import Component
 from langflow.inputs import HandleInput
 from langflow.io import Output
 from langflow.schema.message import Message
-from pymongo import MongoClient
-from pymongo.collection import Collection
 
 
 class WudaoSaveRecordComponent(Component):
@@ -57,7 +57,6 @@ class WudaoSaveRecordComponent(Component):
             insert_data = {
                 "title": article["title"],
                 "aid": article["aid"],
-                "type": article["type"],
                 "time": article["time"],
                 "content": article["content"],
                 "file": {

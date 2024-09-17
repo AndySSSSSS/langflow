@@ -1,8 +1,8 @@
 import asyncio
+import os
 import subprocess
 import tempfile
 from typing import List
-import os
 
 from langflow.custom import Component
 from langflow.io import CodeInput, Output
@@ -55,6 +55,14 @@ class WudaoPythonJobComponent(Component):
             print(line.decode().rstrip())
             lines.append(line.decode().rstrip())
 
+        # 读取错误输出
+        while True:
+            error_line = await process.stderr.readline()
+            if error_line == b'':
+                break
+            print("ERROR:", error_line.decode().rstrip())
+            lines.append("ERROR: " + error_line.decode().rstrip())
+
         await process.wait()
         return_code = process.returncode
 
@@ -80,5 +88,5 @@ class WudaoPythonJobComponent(Component):
     async def execute_function_data(self) -> Data or List[Data]:
         results = await self.execute_function()  # 直接使用 await 而不是 asyncio.run
         results = results if isinstance(results, list) else [results]
-        data = [(Data(text=x) if isinstance(x, str) else Data(**x)) for x in results]
+        data = [(Data(text=str(x)) if isinstance(x, str) or isinstance(x, int) else Data(**x)) for x in results]
         return data

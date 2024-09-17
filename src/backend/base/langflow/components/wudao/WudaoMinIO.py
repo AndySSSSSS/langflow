@@ -2,7 +2,6 @@ from minio import Minio
 
 from langflow.custom import Component
 from langflow.io import StrInput, BoolInput, Output
-from langflow.schema.message import Message
 
 
 class WudaoMinioComponent(Component):

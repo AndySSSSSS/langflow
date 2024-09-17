@@ -54,7 +54,7 @@ export default function SettingsPage(): JSX.Element {
       ),
     },
     {
-      title: "Langflow API",
+      title: "Platform API",
       href: "/settings/api-keys",
       icon: (
         <ForwardedIconComponent

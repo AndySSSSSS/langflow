@@ -1,10 +1,8 @@
-from datetime import timedelta
-from io import BytesIO
-
 from minio import Minio
+from pymongo import MongoClient
 
 from langflow.custom import Component
-from langflow.io import StrInput, MessageTextInput, HandleInput,DataInput, Output
+from langflow.io import MessageTextInput, HandleInput, StrInput, Output
 from langflow.schema import Data
 from langflow.utils.wudao.tool_playwright import save_page_pdf
 
@@ -16,11 +14,17 @@ class WudaoSpiderComponent(Component):
     name = "WudaoSpider"
 
     inputs = [
-        DataInput(
-            name="data",
-            display_name="Parameters",
+        MessageTextInput(
+            name="aid",
+            display_name="The aid fo article",
+            info="The aid to scrape or crawl",
             required=True,
-            info="aid, bucket_name, bucket_name",
+        ),
+        StrInput(
+            name="bucket_name",
+            display_name="Bucket name of MinIO",
+            required=True,
+            value="files",
         ),
         HandleInput(
             name="minio",
@@ -36,23 +40,6 @@ class WudaoSpiderComponent(Component):
             input_types=["MongoClient"],
             info="The MongoClient",
         ),
-        MessageTextInput(
-            name="aid",
-            display_name="Aid fo news to crawl",
-            info="The aid to scrape or crawl",
-            advanced=True,
-        ),
-        MessageTextInput(
-            name="bucket_name",
-            display_name="Bucket of MinIO",
-            advanced=True,
-        ),
-        MessageTextInput(
-            name="type",
-            display_name="Column Type",
-            info="Column type of the article you download.",
-            advanced=True,
-        ),
     ]
 
     outputs = [
@@ -63,22 +50,19 @@ class WudaoSpiderComponent(Component):
         minio = self.minio if isinstance(self.minio, Minio) else self.minio
         mongo = self.mongo if isinstance(self.mongo, MongoClient) else self.mongo
         # 爬取新闻地址
-        aid = self.data.aid if isinstance(self.data, Data) and self.data.__contains__('aid') else self.aid
+        aid = self.aid
         # minIo bucket name
-        bucket_name = self.data.bucket_name if isinstance(self.data, Data) and self.data.__contains__('bucket_name') else self.bucket_name
-        # 文章类型，column name
-        type = self.data.type if isinstance(self.data, Data) and self.data.__contains__('type') else self.type
+        bucket_name = self.bucket_name
 
         # check 文章是否已经下载过
         collection = mongo['files']
         article_mongo = collection.find_one({'aid': aid})
         if article_mongo is not None:
-            return {'error' : '该网页已下载。'}
+            return {'error': '该网页已下载。'}
 
         url = f'https://www.chinacoop.gov.cn/news.html?aid={aid}'
         # 获取文章
         article = await save_page_pdf(url, minio, bucket_name)
         article["bucket_name"] = bucket_name
-        article["type"] = type
         self.status = url
         return article
