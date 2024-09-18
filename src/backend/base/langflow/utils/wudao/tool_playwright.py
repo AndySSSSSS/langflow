@@ -30,6 +30,11 @@ async def save_page_pdf(page_url: str, minio_client, bucket_name) -> dict:
 
             browser = await p.chromium.launch()
             page = await browser.new_page()
+            # 设置请求头，告诉服务器接受 UTF-8 编码
+            await page.set_extra_http_headers({
+                'Accept-Language': 'zh-CN,zh;q=0.9'
+            })
+
             await page.goto(page_url)
             await page.wait_for_timeout(3000)
             # await page.wait_for_selector('div.content')
