@@ -84,7 +84,7 @@ b: ## add by AndySong
 f: ## add by AndySong
 	make run_frontend
 
-init: check_tools clean_python_cache clean_npm_cache ## initialize the project
+init: check_tools clean_python_cache # clean_npm_cache ## initialize the project
 	@make install_backend
 	@make install_frontend
 	@make build_frontend
