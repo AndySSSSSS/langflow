@@ -10,6 +10,7 @@ lerna-debug.log*
 qdrant_storage
 
 src/frontend/package-lock.json
+.dspy_cache
 
 # Mac
 .DS_Store
