@@ -9,6 +9,8 @@ yarn-error.log*
 lerna-debug.log*
 qdrant_storage
 
+src/frontend/package-lock.json
+
 # Mac
 .DS_Store
 
