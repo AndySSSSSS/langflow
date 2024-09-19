@@ -1,9 +1,11 @@
 import asyncio
+import logging
 import os
 import subprocess
 import tempfile
 from typing import List
 
+from langflow.base.logger.index import AsyncLogger
 from langflow.custom import Component
 from langflow.io import CodeInput, Output
 from langflow.schema import Data, dotdict
@@ -52,7 +54,7 @@ class WudaoPythonJobComponent(Component):
             line = await process.stdout.readline()
             if line == b'':
                 break
-            print(line.decode().rstrip())
+            AsyncLogger.log(line.decode().rstrip())
             lines.append(line.decode().rstrip())
 
         # 读取错误输出
@@ -60,7 +62,7 @@ class WudaoPythonJobComponent(Component):
             error_line = await process.stderr.readline()
             if error_line == b'':
                 break
-            print("ERROR:", error_line.decode().rstrip())
+            AsyncLogger.log(error_line.decode().rstrip(), level=logging.ERROR)
             lines.append("ERROR: " + error_line.decode().rstrip())
 
         await process.wait()

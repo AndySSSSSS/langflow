@@ -1,9 +1,10 @@
 from minio import Minio
 from pymongo import MongoClient
 
+from langflow.base.logger.index import AsyncLogger
 from langflow.custom import Component
 from langflow.io import MessageTextInput, HandleInput, StrInput, Output
-from langflow.schema import Data
+
 from langflow.utils.wudao.tool_playwright import save_page_pdf
 
 
@@ -58,6 +59,7 @@ class WudaoSpiderComponent(Component):
         collection = mongo['files']
         article_mongo = collection.find_one({'aid': aid})
         if article_mongo is not None:
+            AsyncLogger.log(f"该网页已下载:[{aid}]")
             return {'error': '该网页已下载。'}
 
         url = f'https://www.chinacoop.gov.cn/news.html?aid={aid}'

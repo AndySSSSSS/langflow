@@ -3,6 +3,8 @@ from io import BytesIO
 from urllib.parse import urlparse, parse_qs
 
 from bs4 import BeautifulSoup
+
+from langflow.base.logger.index import AsyncLogger
 from langflow.utils.wudao.const_html_page import EXP_GONG_XIAO_NEWS
 from langflow.utils.wudao.tool_date import normalize_date
 from playwright.async_api import async_playwright
@@ -10,19 +12,19 @@ from playwright.async_api import async_playwright
 
 async def loop_for_page(page, count):
     await page.reload()
-    # await page.wait_for_selector('div.content')
+    await page.wait_for_selector('div.content')
     await page.evaluate(EXP_GONG_XIAO_NEWS)
     html = await page.content()
     article = await fetch_webpage_content(html)
     if count > 0 and len(article['title']) == 0:
-        print(f'5s后尝试重新获取页面，剩余次数：{str(count - 1)}')
+        AsyncLogger.log(f'5s后尝试重新获取页面，剩余次数：{str(count - 1)}')
         await page.wait_for_timeout(5000)
         article = await loop_for_page(page, count - 1)
     return article
 
 
 async def save_page_pdf(page_url: str, minio_client, bucket_name) -> dict:
-    print(f"Saving page [{page_url}] to MinIO bucket: [{bucket_name}]")
+    AsyncLogger.log(f"Start Saving page [{page_url}]")
     async with async_playwright() as p:
         try:
             if page_url is None or 'news.html' not in page_url:
@@ -83,12 +85,13 @@ async def save_page_pdf(page_url: str, minio_client, bucket_name) -> dict:
             article['presigned_url'] = presigned_url
             article['aid'] = get_url_param(page_url, 'aid')
 
-            # print(article)
+            # AsyncLogger.log(article)
 
             await browser.close()
+            AsyncLogger.log(f"Saving page success：[{page_url}] to MinIO bucket: [{bucket_name}]")
             return article
         except Exception as e:
-            print(f'save_page_pdf error: {e}')
+            AsyncLogger.log(f'save_page_pdf error: {e}')
             return {'error': '获取页面失败'}
 
 def get_full_url(url: str) -> str:
