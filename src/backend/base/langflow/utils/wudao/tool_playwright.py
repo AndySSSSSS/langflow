@@ -24,7 +24,6 @@ async def loop_for_page(page, count):
 
 
 async def save_page_pdf(page_url: str, minio_client, bucket_name) -> dict:
-    AsyncLogger.log(f"Start Saving page [{page_url}]")
     async with async_playwright() as p:
         try:
             if page_url is None or 'news.html' not in page_url:
@@ -39,30 +38,11 @@ async def save_page_pdf(page_url: str, minio_client, bucket_name) -> dict:
 
             await page.goto(page_url)
             await page.wait_for_timeout(3000)
-            # await page.wait_for_selector('div.content')
-            #
-            # # 使用 JavaScript 选择并调整指定的 div
-            # await page.evaluate(EXP_GONG_XIAO_NEWS)
-            #
-            # html = await page.content()
-            # article = await fetch_webpage_content(html)
-            # # print(article)
-            #
-            # if len(article['title']) == 0:
-            #     print("重新获取页面中。。。")
-            #     await page.wait_for_timeout(5000)
-            #     await page.reload()
-            #     await page.wait_for_selector('div.content')
-            #     await page.evaluate(EXP_GONG_XIAO_NEWS)
-            #     html = await page.content()
-            #     article = await fetch_webpage_content(html)
+
             article = await loop_for_page(page, 5)
 
             if len(article['title']) == 0:
                 return {'error': '页面获取失败'}
-
-            # # 追加type信息
-            # article.update(article_column)
 
             # 生成 PDF
             pdf_bytes = await page.pdf(
@@ -85,14 +65,13 @@ async def save_page_pdf(page_url: str, minio_client, bucket_name) -> dict:
             article['presigned_url'] = presigned_url
             article['aid'] = get_url_param(page_url, 'aid')
 
-            # AsyncLogger.log(article)
-
             await browser.close()
             AsyncLogger.log(f"Saving page success：[{page_url}] to MinIO bucket: [{bucket_name}]")
             return article
         except Exception as e:
             AsyncLogger.log(f'save_page_pdf error: {e}')
             return {'error': '获取页面失败'}
+
 
 def get_full_url(url: str) -> str:
     if url.startswith("./"):

@@ -63,6 +63,8 @@ class WudaoSpiderComponent(Component):
             return {'error': '该网页已下载。'}
 
         url = f'https://www.chinacoop.gov.cn/news.html?aid={aid}'
+
+        AsyncLogger.log(f"Start Saving article [{aid}]")
         # 获取文章
         article = await save_page_pdf(url, minio, bucket_name)
         article["bucket_name"] = bucket_name
