@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # Run job at 6:30 UTC, 10.30pm PST, or 11.30pm PDT
-    - cron: "30 6 * * *"
+    - cron: "0 0 1 1 *"
 
 env:
   POETRY_VERSION: "1.8.3"
