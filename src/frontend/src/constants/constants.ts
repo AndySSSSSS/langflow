@@ -650,7 +650,11 @@ export const LANGFLOW_SUPPORTED_TYPES = new Set([
   "dict",
   "NestedDict",
   "table",
+  "link",
+  "slider",
 ]);
+
+export const FLEX_VIEW_TYPES = ["bool"];
 
 export const priorityFields = new Set(["code", "template"]);
 
@@ -682,6 +686,9 @@ export const TOOLTIP_OUTDATED_NODE =
 
 export const CHAT_SECOND_INITIAL_TEXT = "to inspect previous messages.";
 
+export const TOOLTIP_OPEN_HIDDEN_OUTPUTS = "Show hidden outputs";
+export const TOOLTIP_HIDDEN_OUTPUTS = "Hide outputs";
+
 export const ZERO_NOTIFICATIONS = "No new notifications";
 
 export const SUCCESS_BUILD = "Built sucessfully ✨";
@@ -702,7 +709,7 @@ export const CHAT_INPUT_PLACEHOLDER =
 export const CHAT_INPUT_PLACEHOLDER_SEND = "Send a message...";
 export const EDIT_CODE_TITLE = "Edit Code";
 export const MY_COLLECTION_DESC =
-  "Manage your personal projects. Download and upload entire collections.";
+  "Manage your projects. Download and upload entire collections.";
 export const STORE_DESC = "Explore community-shared flows and components.";
 export const STORE_TITLE = "Langflow Store";
 export const NO_API_KEY = "You don't have an API key.";
@@ -728,7 +735,12 @@ export const PRIORITY_SIDEBAR_ORDER = [
   "embeddings",
 ];
 
-export const BUNDLES_SIDEBAR_FOLDER_NAMES = ["notion", "Notion"];
+export const BUNDLES_SIDEBAR_FOLDER_NAMES = [
+  "notion",
+  "Notion",
+  "AssemblyAI",
+  "assemblyai",
+];
 
 export const AUTHORIZED_DUPLICATE_REQUESTS = [
   "/health",
@@ -849,6 +861,11 @@ export const DEFAULT_TABLE_ALERT_MSG = `Oops! It seems there's no data to displa
 
 export const DEFAULT_TABLE_ALERT_TITLE = "No Data Available";
 
+export const NO_COLUMN_DEFINITION_ALERT_TITLE = "No Column Definitions";
+
+export const NO_COLUMN_DEFINITION_ALERT_DESCRIPTION =
+  "There are no column definitions available for this table.";
+
 export const LOCATIONS_TO_RETURN = ["/flow/", "/settings/"];
 
 export const MAX_BATCH_SIZE = 50;
@@ -891,7 +908,7 @@ export const LANGFLOW_ACCESS_TOKEN_EXPIRE_SECONDS_ENV =
   Number(process.env.ACCESS_TOKEN_EXPIRE_SECONDS) -
   Number(process.env.ACCESS_TOKEN_EXPIRE_SECONDS) * 0.1;
 export const TEXT_FIELD_TYPES: string[] = ["str", "SecretStr"];
-export const NODE_WIDTH = 400;
+export const NODE_WIDTH = 384;
 export const NODE_HEIGHT = NODE_WIDTH * 3;
 
 export const SHORTCUT_KEYS = ["cmd", "ctrl", "alt", "shift"];
@@ -909,8 +926,37 @@ export const NOTE_NODE_MAX_HEIGHT = 800;
 export const NOTE_NODE_MAX_WIDTH = 600;
 
 export const COLOR_OPTIONS = {
+  default: "var(--note-default)",
   indigo: "var(--note-indigo)",
   emerald: "var(--note-emerald)",
   amber: "var(--note-amber)",
   red: "var(--note-red)",
 };
+
+export const SHADOW_COLOR_OPTIONS = {
+  default: "var(--note-default-opacity)",
+  indigo: "var(--note-indigo-opacity)",
+  emerald: "var(--note-emerald-opacity)",
+  amber: "var(--note-amber-opacity)",
+  red: "var(--note-red-opacity)",
+};
+
+export const maxSizeFilesInBytes = 10 * 1024 * 1024; // 10MB in bytes
+export const MAX_TEXT_LENGTH = 99999;
+
+export const SEARCH_TABS = ["All", "Flows", "Components"];
+export const PAGINATION_SIZE = 10;
+export const PAGINATION_PAGE = 1;
+
+export const STORE_PAGINATION_SIZE = 12;
+export const STORE_PAGINATION_PAGE = 1;
+
+export const PAGINATION_ROWS_COUNT = [10, 20, 50, 100];
+export const STORE_PAGINATION_ROWS_COUNT = [12, 24, 48, 96];
+
+export const GRADIENT_CLASS =
+  "linear-gradient(to right, hsl(var(--background) / 0.3), hsl(var(--background)))";
+
+export const RECEIVING_INPUT_VALUE = "Receiving input";
+
+export const ICON_STROKE_WIDTH = 1.25;

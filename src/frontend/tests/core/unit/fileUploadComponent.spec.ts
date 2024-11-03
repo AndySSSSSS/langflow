@@ -22,7 +22,7 @@ test("should be able to upload a file", async ({ page }) => {
   }
 
   while (modalCount === 0) {
-    await page.getByText("New Project", { exact: true }).click();
+    await page.getByText("New Flow", { exact: true }).click();
     await page.waitForTimeout(3000);
     modalCount = await page.getByTestId("modal-title")?.count();
   }
@@ -30,13 +30,9 @@ test("should be able to upload a file", async ({ page }) => {
     timeout: 30000,
   });
   await page.getByTestId("blank-flow").click();
-  await page.waitForSelector('[data-testid="extended-disclosure"]', {
-    timeout: 30000,
-  });
 
-  await page.getByTestId("extended-disclosure").click();
-  await page.getByPlaceholder("Search").click();
-  await page.getByPlaceholder("Search").fill("file");
+  await page.getByTestId("sidebar-search-input").click();
+  await page.getByTestId("sidebar-search-input").fill("file");
 
   await page.waitForTimeout(1000);
 
@@ -46,20 +42,20 @@ test("should be able to upload a file", async ({ page }) => {
     .dragTo(page.locator('//*[@id="react-flow-id"]'));
   await page.mouse.up();
   await page.mouse.down();
-  await page.getByTitle("fit view").click();
-  await page.getByTitle("zoom out").click();
-  await page.getByTitle("zoom out").click();
-  await page.getByTitle("zoom out").click();
+  await page.getByTestId("fit_view").click();
+  await page.getByTestId("zoom_out").click();
+  await page.getByTestId("zoom_out").click();
+  await page.getByTestId("zoom_out").click();
   const fileChooserPromise = page.waitForEvent("filechooser");
-  await page.getByTestId("icon-FileSearch2").click();
+  await page.getByTestId("button_upload_file").click();
   const fileChooser = await fileChooserPromise;
   await fileChooser.setFiles(
     path.join(__dirname, "../../assets/test_file.txt"),
   );
   await page.getByText("test_file.txt").isVisible();
 
-  await page.getByPlaceholder("Search").click();
-  await page.getByPlaceholder("Search").fill("text output");
+  await page.getByTestId("sidebar-search-input").click();
+  await page.getByTestId("sidebar-search-input").fill("text output");
 
   await page
     .getByTestId("outputsText Output")
@@ -67,13 +63,13 @@ test("should be able to upload a file", async ({ page }) => {
     .dragTo(page.locator('//*[@id="react-flow-id"]'));
   await page.mouse.up();
   await page.mouse.down();
-  await page.getByTitle("fit view").click();
-  await page.getByTitle("zoom out").click();
-  await page.getByTitle("zoom out").click();
-  await page.getByTitle("zoom out").click();
+  await page.getByTestId("fit_view").click();
+  await page.getByTestId("zoom_out").click();
+  await page.getByTestId("zoom_out").click();
+  await page.getByTestId("zoom_out").click();
 
-  await page.getByPlaceholder("Search").click();
-  await page.getByPlaceholder("Search").fill("parse data");
+  await page.getByTestId("sidebar-search-input").click();
+  await page.getByTestId("sidebar-search-input").fill("parse data");
   await page
     .getByTestId("helpersParse Data")
     .first()
@@ -81,10 +77,10 @@ test("should be able to upload a file", async ({ page }) => {
 
   await page.mouse.up();
   await page.mouse.down();
-  await page.getByTitle("fit view").click();
-  await page.getByTitle("zoom out").click();
-  await page.getByTitle("zoom out").click();
-  await page.getByTitle("zoom out").click();
+  await page.getByTestId("fit_view").click();
+  await page.getByTestId("zoom_out").click();
+  await page.getByTestId("zoom_out").click();
+  await page.getByTestId("zoom_out").click();
 
   let visibleElementHandle;
 
@@ -134,6 +130,8 @@ test("should be able to upload a file", async ({ page }) => {
     }
   }
 
+  await page.getByTitle("fit view").click();
+
   await visibleElementHandle.hover();
   await page.mouse.down();
 
@@ -154,7 +152,7 @@ test("should be able to upload a file", async ({ page }) => {
   // Release the mouse
   await page.mouse.up();
 
-  await page.getByText("Playground", { exact: true }).click();
+  await page.getByText("Playground", { exact: true }).last().click();
 
   await page.waitForSelector("text=Run Flow", {
     timeout: 30000,

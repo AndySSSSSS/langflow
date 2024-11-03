@@ -108,6 +108,7 @@ export default function CodeTabsComponent({
                 size="icon"
                 className="text-muted-foreground"
                 onClick={copyToClipboard}
+                data-testid="btn-copy-code"
               >
                 {isCopied ? (
                   <IconComponent name="Check" className="h-4 w-4" />
@@ -144,7 +145,7 @@ export default function CodeTabsComponent({
             </div>
           ) : tab.name.toLowerCase() === "tweaks" ? (
             <>
-              <TweaksComponent open={open} />
+              <TweaksComponent open={open ?? false} />
             </>
           ) : null}
         </TabsContent>

@@ -43,6 +43,7 @@ export type APIClassType = {
   output_types?: Array<string>;
   custom_fields?: CustomFieldsType;
   beta?: boolean;
+  legacy?: boolean;
   documentation: string;
   error?: string;
   official?: boolean;
@@ -84,6 +85,8 @@ export type InputFieldType = {
   combobox?: boolean;
   info?: string;
   [key: string]: any;
+  icon?: string;
+  text?: string;
 };
 
 export type OutputFieldProxyType = {
